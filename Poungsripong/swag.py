@@ -9,12 +9,48 @@ i = complex(0,1)
 ### Materials
 
 def ri_Al2O3(lam):
-    n = (1+1.023798/(1-(0.06144821/lam)**2)+1.058264/(1-(0.1106997/lam)**2)+5.280792/(1-(17.92656/lam)**2))**.5
-    return(n)
+    tableau3D = []
+
+    file = open('materials/Al2O3_Zhukovsky.txt', "r")
+    lines = file.readlines()
+    file.close()
+
+    nb_lines = len(lines)
+    for i in range (nb_lines):
+        values = lines[i].split("\t")
+        values[2] = values[2].rstrip("\n")
+        values = [float(val) for val in values]
+        tableau3D.append(values)
+    
+    tableau3D = np.array(tableau3D)
+    wl = []
+    wl = tableau3D[:,0]
+    ri_exp = []
+    ri_exp = tableau3D[:,1]
+    ri = np.interp(lam * 10**(-3), wl, ri_exp)
+    return(ri)
 
 def ri_TiO2(lam):
-    n=(5.913+0.2441/(lam**2-0.0803))**.5
-    return(n)
+    tableau3D = []
+
+    file = open('materials/TiO2_Zhukovsky.txt', "r")
+    lines = file.readlines()
+    file.close()
+
+    nb_lines = len(lines)
+    for i in range (nb_lines):
+        values = lines[i].split("\t")
+        values[2] = values[2].rstrip("\n")
+        values = [float(val) for val in values]
+        tableau3D.append(values)
+    
+    tableau3D = np.array(tableau3D)
+    wl = []
+    wl = tableau3D[:,0]
+    ri_exp = []
+    ri_exp = tableau3D[:,1]
+    ri = np.interp(lam * 10**(-3), wl, ri_exp)
+    return(ri)
 
 def epsAubb(lam):
 
@@ -379,131 +415,7 @@ def reflectance(thick_up, thick_down, thick_gap, thick_reso, thick_gold, thick_P
     Rup = abs(S[n_mod, n_mod]) ** 2 
     return Rup
 
-def Field_aper(thick_up, thick_down, thick_gap, thick_reso, thick_gold, period, wavelength, angle, polarization, perm_dielec, perm_Ag, n_mod):
-    
-    #material_list = [1., 'Silver']
-    #layer_down = [1,0,1]
-    
-    # Find the mode (it's unique) which is able to propagate in the GP gap
-    #start_index_eff = 4
-    #tol = 1e-12
-    #step_max = 100000
-
-    #thicknesses_down = [thick_reso,thick_gap,thick_gold]
-    #Layer_down = pm.Structure(material_list, layer_down, thicknesses_down)
-    #GP_effective_index = pm.steepest(start_index_eff, tol, step_max, Layer_down, wavelength, polarization)
-    
-    wavelength_norm = wavelength / period
-    
-    thick_up = thick_up / period 
-    thick_down = thick_down / period 
-    thick_gap = thick_gap / period
-    thick_reso = thick_reso / period
-    thick_gold = thick_gold / period
-
-    ### blocs de dielec dans de l'Ag
-    blocs_1 = np.array([[(1 + thick_gap) / 2, (1 - thick_gap) / 2]]) 
-    blocs_2 = np.array([[thick_gap, (1 - thick_gap) / 2]])
-
-    ### blocs d'Ag dans du dielec
-    #blocs_1 = np.array([[thick_reso, 0]]) 
-    #blocs_2 = np.array([[thick_reso, 0], [thick_gold, thick_reso + thick_gap]])    
-
-    k0 = 2 * np.pi / wavelength_norm
-    a0 = k0 * np.sin(angle)
-
-    n_mod_total = 2 * n_mod + 1
-
-    A = [] # matrice de stockage de tous les modes et valeurs propres
-
-    # milieu incident, metal d'argent puis air # dielec (e2) dans Ag (e1)
-    Pup, Vup = aper(k0, a0, polarization, perm_Ag, perm_dielec, n_mod_total, blocs_1)
-    A.append([Pup.tolist(), Vup.tolist()])     
-
-    # couche 2 : cube d'argent dans couche d'air # dielec (e2) dans Ag (e1)
-    Pdown, Vdown = aper(k0, a0, polarization, perm_Ag, perm_dielec, n_mod_total, blocs_2)
-    A.append([Pdown.tolist(), Vdown.tolist()])
-
-    thickness = np.array([thick_up, thick_down])
-
-    n_couches = thickness.size
-
-    # matrice neutre pour l'opération de cascadage
-    S11 = np.zeros((n_mod_total,n_mod_total))
-    S12 = np.eye(n_mod_total)
-    S1 = np.append(S11,S12,axis=0)
-    S2 = np.append(S12,S11,axis=0)
-    S0 = np.append(S1,S2,1)
-
-    # matrices d'interface
-    B = []
-    for k in range(n_couches-1): # car nc - 1 interfaces dans la structure
-        a = np.array(A[k][0])
-        b = np.array(A[k+1][0])
-        c = interface(a,b)
-        c = c.tolist()
-        B.append(c)
-
-    S = []
-    S0 = S0.tolist()
-    S.append(S0)
-
-    # Matrices montantes
-    for k in range(n_couches-1):
-        a = np.array(S[k])
-        b = c_haut(np.array(B[k]),np.array(A[k][1]),thickness[k])
-        S_new = cascade(a,b) 
-        S.append(S_new.tolist())
-
-    a = np.array(S[n_couches-1])
-    b = np.array(A[n_couches-1][1])
-    c = c_bas(a,b,thickness[n_couches-1])
-    S.append(c.tolist())
-
-    # Matrices descendantes
-    Q = []
-    Q.append(S0)
-
-    for k in range(n_couches-1):
-        a = np.array(B[n_couches-k-2])
-        b = np.array(A[n_couches-(k+1)][1])
-        c = thickness[n_couches-(k+1)]
-        d = np.array(Q[k])
-        Q_new = cascade(c_bas(a,b,c),d)
-        Q.append(Q_new.tolist())
-
-    a = np.array(Q[k])
-    b = np.array(A[0][1])
-    c = c_haut(a,b,thickness[n_couches-(k+1)])
-    Q.append(c.tolist())
-
-    stretch = period / (2 * n_mod + 1)
-
-    exc = np.zeros(2*n_mod_total)
-    # Eclairage par au dessus, onde plane
-    #exc[n_mod] = 1
-    # eclairage par en dessous, onde plane
-    #exc[n_mod_total + n_mod] = 1
-    # eclairage par en dessous, guide d'onde (le mode avec la plus grande partie réelle)
-    #position = np.argmax(np.real(Vdown))
-
-    GP_effective_index = 3.87 + 0.13j # pour un lam de 700
-    position_GP = np.argmin(abs(Vdown - GP_effective_index * k0))
-    
-    exc[n_mod_total + position_GP] = 1
-
-    ny = np.floor(thickness * period / stretch)
-
-    M = HErmes(np.array(S[0]), np.array(Q[n_couches-0-1]), np.array(A[0][1]), np.array(A[0][0])[0:n_mod_total,0:n_mod_total],exc,int(ny[0]), thickness[0], a0)
-    
-    for j in np.arange(1,n_couches):
-        M_new = HErmes(np.array(S[j]), np.array(Q[n_couches-j-1]), np.array(A[j][1]), np.array(A[j][0])[0:n_mod_total,0:n_mod_total],exc,int(ny[j]), thickness[j], a0) 
-        M = np.append(M,M_new, 0)
-
-    Mfield = np.abs(M)**2
-    return Mfield
-
-def Field_grating(thick_up, thick_down, thick_gap, thick_reso, thick_gold, period, wavelength, angle, polarization, perm_dielec, perm_Ag, n_mod):
+def Field(thick_up, thick_down, thick_gap, thick_reso, thick_gold, period, wavelength, angle, polarization, perm_dielec, perm_Ag, n_mod):
     #material_list = [1., 'Silver']
     #layer_down = [1,0,1]
     
@@ -635,7 +547,7 @@ thick_gold = 200 # hauteur de l'or au dessus du substrat
 period = 1500
 thick_PVP = 4
 thick_down = 200
-width_reso = 50
+width_reso = thick_reso
 width_PVP = width_reso + (2*4)
 
 # A modifier selon le point de fonctionnement
@@ -654,44 +566,130 @@ perm_PVP = 1.53 ** 2
 
 n_mod = 75 
 
+### Etude des indices de réfraction TiO2 et Al2O3
+# list_wavelength = np.linspace(400, 1500, 1000)
+
+# ri_al = np.empty(list_wavelength.size)
+# ri_ti = np.empty(list_wavelength.size)
+
+# idx = 0
+
+# for wavelength in list_wavelength:
+#     ri_al[idx] = ri_Al2O3(wavelength)
+#     ri_ti[idx] = ri_TiO2(wavelength)
+#     idx += 1
+
+# plt.figure(2)
+# #plt.subplot(121)
+# plt.plot(list_wavelength, ri_ti) #, "r", label = "interpolation")
+# #plt.plot(list_wavelength, R_gold, "b", label = "Gold only")
+# #plt.plot(list_wavelength, R_period500 / R_gold500, 'r', label = 'Period = 500 nm')
+# #plt.plot(list_wavelength, R_period1500 / R_gold1500, 'b', label = 'Period = 1500 nm')
+# #plt.ylim(0.9, 1)
+# plt.ylabel("RI")
+# plt.xlabel("Wavelength (nm)")
+# #plt.legend()
+# plt.title("TiO2")
+# plt.show(block=False)
+#plt.savefig("refractive_index_TiO2.jpg")
+
+
+#plt.subplot(122)
+#plt.plot(list_wavelength, ri_al) #, "b", label = "Al2O3")
+# #plt.plot(list_wavelength, ri_ti, "r", label = "TiO2")
+# #plt.plot(list_wavelength, R_gold, "b", label = "Gold only")
+# #plt.plot(list_wavelength, R_period500 / R_gold500, 'r', label = 'Period = 500 nm')
+# #plt.plot(list_wavelength, R_period1500 / R_gold1500, 'b', label = 'Period = 1500 nm')
+# #plt.ylim(0.9, 1)
+#plt.ylabel("Al2O3")
+#plt.ylabel("Refractive index")
+#plt.xlabel("Wavelength (nm)")
+# #plt.legend()
+#plt.title("Al2O3")
+#plt.show(block=False)
+#plt.savefig("refractive_index_Al2O3_TiO2.jpg")
+
+### Contour plot de la reflectance en fonction de la longueur d'onde (ordonnée) et de la taille du résonateur (abscisse)
+# list_wavelength = np.linspace(900, 400, 100)
+# list_nanocube_size = np.linspace(45,60,30)
+
+# Rbrut = np.empty((list_wavelength.size, list_nanocube_size.size))
+# Rgold = np.empty((list_wavelength.size, list_nanocube_size.size))
+# Rnorm = np.empty((list_wavelength.size, list_nanocube_size.size))
+
+# idx_wav = 0
+# for wavelength in list_wavelength:
+#     perm_Al2O3 = ri_Al2O3(wavelength)
+#     perm_Ag = epsAgbb(wavelength)
+#     perm_Au = epsAubb(wavelength)
+#     idx_reso = 0
+#     for thick_reso in list_nanocube_size:
+#         width_reso = thick_reso 
+#         width_PVP = width_reso + 8
+#         Rbrut[idx_wav, idx_reso] = reflectance(thick_up, thick_down, thick_gap, thick_reso, thick_gold, thick_PVP, width_reso, width_PVP, period, wavelength, angle, polarization, perm_PVP, perm_Al2O3, perm_Ag, perm_Au, perm_Glass, n_mod)
+#         Rgold[idx_wav, idx_reso] = reflectance(thick_up, thick_down, thick_gap, 0, thick_gold, 0, 0, 0, period, wavelength, angle, polarization, perm_PVP, perm_Al2O3, perm_Ag, perm_Au, perm_Glass, n_mod)
+#         idx_reso += 1
+#     idx_wav += 1
+
+# Rnorm = Rbrut / Rgold
+
+# plt.figure(1)
+# plt.contourf(list_nanocube_size, list_wavelength, Rnorm)
+# plt.show(block=False)
+
+# plt.figure(2)
+# plt.imshow(Rnorm, cmap = 'jet', aspect = 'auto')
+# plt.show(block=False)
+
+# plt.figure(3)
+# plt.contour(list_nanocube_size, list_wavelength, Rnorm)
+# plt.show(block=False)
+
+# plt.figure(4)
+# plt.imshow(Rnorm * 127, cmap = 'jet', aspect = 'auto')
+# plt.show(block=False)
+
+
 ### reflectance en fonction de la longueur d'onde (image 1d)
-list_wavelength = np.linspace(400, 900, 100)
+# list_wavelength = np.linspace(400, 1300, 1300-400)
 
-R_al = np.empty(list_wavelength.size)
-R_ti = np.empty(list_wavelength.size)
-#R_gold500 = np.empty(list_wavelength.size)
-R_gold1500 = np.empty(list_wavelength.size)
-#R_without_PVP = np.empty(list_wavelength.size)
-R_period500 = np.empty(list_wavelength.size)
-R_period1500 = np.empty(list_wavelength.size)
+# R_al = np.empty(list_wavelength.size)
+# R_ti = np.empty(list_wavelength.size)
+# R_gold1500 = np.empty(list_wavelength.size)
 
-idx = 0
+# idx = 0
 
-for wavelength in list_wavelength:
-    perm_Ag = epsAgbb(wavelength)
-    perm_Au = epsAubb(wavelength)
-    perm_Al2O3 = ri_Al2O3(wavelength) ** 2
-    perm_TiO2 = ri_TiO2(wavelength) ** 2
-    R_al[idx] = reflectance(thick_up, thick_down, thick_gap, thick_reso, thick_gold, thick_PVP, width_reso, width_PVP, period, wavelength, angle, polarization, perm_PVP, perm_Al2O3, perm_Ag, perm_Au, perm_Glass, n_mod)
-    R_ti[idx] = reflectance(thick_up, thick_down, thick_gap, thick_reso, thick_gold, thick_PVP, width_reso, width_PVP, period, wavelength, angle, polarization, perm_PVP, perm_TiO2, perm_Ag, perm_Au, perm_Glass, n_mod)
-    #R_gold500[idx] = reflectance(thick_up, thick_down, thick_gap, 0, thick_gold, 0, 0, 0, 500, wavelength, angle, polarization, perm_PVP, perm_TiO2, perm_Ag, perm_Au, perm_Glass, n_mod)    
-    R_gold1500[idx] = reflectance(thick_up, thick_down, thick_gap, 0, thick_gold, 0, 0, 0, 1500, wavelength, angle, polarization, perm_PVP, perm_TiO2, perm_Ag, perm_Au, perm_Glass, n_mod)    
-    #R_period500[idx] = reflectance(thick_up, thick_down, thick_gap, thick_reso, thick_gold, thick_PVP, width_reso, width_PVP, 500, wavelength, angle, polarization, perm_PVP, perm_TiO2, perm_Ag, perm_Au, perm_Glass, n_mod)
-    #R_period1500[idx] = reflectance(thick_up, thick_down, thick_gap, thick_reso, thick_gold, thick_PVP, width_reso, width_PVP, 1500, wavelength, angle, polarization, perm_PVP, perm_TiO2, perm_Ag, perm_Au, perm_Glass, n_mod)
-    #R_without_PVP[idx] = reflectance(thick_up, thick_down, thick_gap, thick_reso, thick_gold, 0, width_reso, 0, period, wavelength, angle, polarization, perm_PVP, perm_TiO2, perm_Ag, perm_Au, perm_Glass, n_mod)    
-    idx += 1
+# for wavelength in list_wavelength:
+#     perm_Ag = epsAgbb(wavelength)
+#     perm_Au = epsAubb(wavelength)
+#     perm_Al2O3 = ri_Al2O3(wavelength) ** 2
+#     perm_TiO2 = ri_TiO2(wavelength) ** 2
+#     R_al[idx] = reflectance(thick_up, thick_down, thick_gap, thick_reso, thick_gold, thick_PVP, width_reso, width_PVP, period, wavelength, angle, polarization, perm_PVP, perm_Al2O3, perm_Ag, perm_Au, perm_Glass, n_mod)
+#     R_ti[idx] = reflectance(thick_up, thick_down, thick_gap, thick_reso, thick_gold, thick_PVP, width_reso, width_PVP, period, wavelength, angle, polarization, perm_PVP, perm_TiO2, perm_Ag, perm_Au, perm_Glass, n_mod)
+#     #R_gold500[idx] = reflectance(thick_up, thick_down, thick_gap, 0, thick_gold, 0, 0, 0, 500, wavelength, angle, polarization, perm_PVP, perm_TiO2, perm_Ag, perm_Au, perm_Glass, n_mod)    
+#     R_gold1500[idx] = reflectance(thick_up, thick_down, thick_gap, 0, thick_gold, 0, 0, 0, 1500, wavelength, angle, polarization, perm_PVP, perm_TiO2, perm_Ag, perm_Au, perm_Glass, n_mod)    
+#     #R_period500[idx] = reflectance(thick_up, thick_down, thick_gap, thick_reso, thick_gold, thick_PVP, width_reso, width_PVP, 500, wavelength, angle, polarization, perm_PVP, perm_TiO2, perm_Ag, perm_Au, perm_Glass, n_mod)
+#     #R_period1500[idx] = reflectance(thick_up, thick_down, thick_gap, thick_reso, thick_gold, thick_PVP, width_reso, width_PVP, 1500, wavelength, angle, polarization, perm_PVP, perm_TiO2, perm_Ag, perm_Au, perm_Glass, n_mod)
+#     #R_without_PVP[idx] = reflectance(thick_up, thick_down, thick_gap, thick_reso, thick_gold, 0, width_reso, 0, period, wavelength, angle, polarization, perm_PVP, perm_TiO2, perm_Ag, perm_Au, perm_Glass, n_mod)    
+#     idx += 1
 
-plt.figure(12)
-plt.plot(list_wavelength, R_al / R_gold1500, "b", label = "Al2O3 gap")
-plt.plot(list_wavelength, R_ti / R_gold1500, "r", label = "TiO2 gap")
-#plt.plot(list_wavelength, R_gold, "b", label = "Gold only")
-#plt.plot(list_wavelength, R_period500 / R_gold500, 'r', label = 'Period = 500 nm')
-#plt.plot(list_wavelength, R_period1500 / R_gold1500, 'b', label = 'Period = 1500 nm')
-#plt.ylim(0.9, 1)
-plt.ylabel("Module")
-plt.xlabel("Wavelength (nm)")
-plt.legend()
-plt.title("Reflectance of the single resonator")
-plt.show(block=False)
-plt.savefig("reflectance_single_resonator_dielec.jpg")
+# plt.figure(3)
+# plt.subplot(211)
+# plt.plot(list_wavelength[0:500], R_al[0:500] / R_gold1500[0:500], "b", label = "Al2O3 gap")
+# plt.plot(list_wavelength[0:500], R_ti[0:500] / R_gold1500[0:500], "r", label = "TiO2 gap")
+# plt.ylabel("Module")
+# #plt.xlabel("Wavelength (nm)")
+# plt.legend()
+# plt.title("Reflectance of the single resonator")
+
+# plt.subplot(212)
+# plt.plot(list_wavelength[200:len(list_wavelength)], R_al[200:len(list_wavelength)] / R_gold1500[200:len(list_wavelength)], "b", label = "Al2O3 gap")
+# plt.plot(list_wavelength[200:len(list_wavelength)], R_ti[200:len(list_wavelength)] / R_gold1500[200:len(list_wavelength)], "r", label = "TiO2 gap")
+# plt.ylabel("Module")
+# plt.xlabel("Wavelength (nm)")
+# plt.legend()
+# #plt.title("Reflectance of the single resonator")
+
+# plt.show(block=False)
+# plt.savefig("reflectance_single_resonator_dielec_2scales.jpg")
 
