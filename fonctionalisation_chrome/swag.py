@@ -413,11 +413,11 @@ def Field_grating(thick_up, thick_down, thick_gap, thick_reso, thick_gold, perio
 
 ### Swag-structure
 thick_super = 200
-width_reso = 75 # largeur du cube
-thick_reso = 75 #hauteur du cube
-thick_gap = 5 # hauteur de diéléctrique en dessous du cube
+width_reso = 30 # largeur du cube
+thick_reso = 30 #hauteur du cube
+thick_gap = 3 # hauteur de diéléctrique en dessous du cube
 thick_func = 3 # si fonctionalisation, alors différent de 0
-thick_gold = 20 # hauteur de l'or au dessus du substrat
+thick_gold = 10 # hauteur de l'or au dessus du substrat
 #thick_cr = 0 # si chrome, alors différent de 0
 period = 500.2153 # periode
 thick_sub = 200
@@ -428,14 +428,14 @@ angle = 0
 polarization = 1
 
 ## Paramètres des matériaux
-perm_env = 1.33 ** 2
+perm_env = 1 ** 2
 perm_dielec = 1.45 ** 2 # spacer
 perm_Glass = 1.5 ** 2 # substrat
 #perm_Ag = epsAgbb(wavelength) # argent
 #perm_Au = epsAubb(wavelength) # or
 #perm_CR = 1.
 
-n_mod = 50 
+n_mod = 75 
 n_mod_total = 2 * n_mod + 1
 
 ### Etude de la dépendance de la réflexion à la longueur d'onde, en fonction de l'épaisseur de gold
@@ -447,6 +447,7 @@ Rnofunc_phase = np.empty(list_wavelength.size)
 idx = 0
 
 geometry = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold, "thick_sub": thick_sub, "period": period}
+geometry_nofunc = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "period": period}
 
 for wavelength in list_wavelength:
     perm_Ag = epsAgbb(wavelength) # argent
@@ -454,17 +455,23 @@ for wavelength in list_wavelength:
     materials = {"perm_env": perm_env, "perm_dielec": perm_dielec, "perm_Glass": perm_Glass, "perm_Ag": perm_Ag, "perm_Au": perm_Au}
     wave = {"wavelength": wavelength, "angle": angle, "polarization": polarization}
     R[idx], Rphase[idx] = reflectance(geometry, wave, materials, n_mod)
+    Rnofunc[idx], Rnofunc_phase[idx] = reflectance(geometry_nofunc, wave, materials, n_mod)
     idx += 1
 
-plt.figure(1)
-plt.subplot(211)
-plt.plot(list_wavelength, R)
+plt.figure(8)
+#plt.subplot(211)
+plt.plot(list_wavelength, R, label = "with func")
+plt.plot(list_wavelength, Rnofunc, label = "without func")
+plt.legend()
 plt.ylabel("Module")
 plt.title("Reflectance")
 
-plt.subplot(212)
-plt.plot(list_wavelength, Rphase) 
-plt.xlabel("Wavelength (nm) ")
-plt.ylabel("Phase of reflectance")
+# plt.subplot(212)
+# plt.plot(list_wavelength, Rphase, label = "with func") 
+# plt.plot(list_wavelength, Rnofunc_phase, label = "without func")
+# plt.legend()
+# plt.xlabel("Wavelength (nm) ")
+# plt.ylabel("Phase of reflectance")
+
 plt.show(block=False)
-plt.savefig("reflectance_dependanceWavelength_with_func.jpg")
+plt.savefig("reflectance_dependanceWavelength_comp_func_v2_air.jpg")
