@@ -298,21 +298,20 @@ def reflectance(geometry, wave, materials, n_mod):
     S = c_bas(S, Vdown, thick_sub)
 
     # reflexion quand on eclaire par le dessus
-    Rup = abs(S[n_mod, n_mod]) ** 2 # correspond à ce qui se passe au niveau du SP layer up
+    #Rup = abs(S[position_up, position_up]) ** 2 # correspond à ce qui se passe au niveau du SP layer up
     # transmission quand on éclaire par le dessus
-    Tup = abs(S[n + n_mod, n_mod]) ** 2 * np.real(Vdown[n_mod]) / (k0 * np.cos(angle)) / perm_Glass * perm_env
+    #Tup = abs(S[n + position_up, position_up]) ** 2 
     # reflexion quand on éclaire par le dessous
     #Rdown = abs(S[n + position_down, n + position_down]) ** 2 
-    Rdown = abs(S[n + n_mod, n + n_mod]) ** 2 
+    Rdown_GP = abs(S[n + n_mod, n + n_mod]) ** 2 
     # transmission quand on éclaire par le dessous
-    Tdown = abs(S[n_mod, n + n_mod]) ** 2 / np.real(Vdown[n_mod]) * perm_Glass * k0 * np.cos(angle) / perm_env
+    #Tdown = abs(S[position_down, n + position_down]) ** 2 
 
     # calcul des phases du coefficient de réflexion
-    phase_R_up = np.angle(S[n_mod, n_mod])
-    phase_R_down = np.angle(S[n + n_mod, n + n_mod])
-    phase_T_up = np.angle(S[n + n_mod, n_mod])
-    phase_T_down = np.angle(S[n_mod, n + n_mod])
-    return Rdown#, Rup #phase_R_down#, Rup, phase_R_up#, Tdown, phase_T_down, Tup, phase_T_up
+    #phase_R_up = np.angle(S[position_up, position_up])
+    #phase_R_down = np.angle(S[n + position_down, n + position_down])
+    phase_R_down_GP = np.angle(S[n + n_mod, n + n_mod])
+    return Rdown_GP, phase_R_down_GP
 
 def Field_grating(thick_up, thick_down, thick_gap, thick_reso, thick_gold, period, wavelength, angle, polarization, perm_dielec, perm_Ag, n_mod):
     #material_list = [1., 'Silver']
@@ -439,17 +438,17 @@ def Field_grating(thick_up, thick_down, thick_gap, thick_reso, thick_gold, perio
 
 ### Swag-structure
 thick_super = 200
-width_reso = 75 # largeur du cube
-thick_reso = 75 # width_reso #hauteur du cube
-thick_gap = 10 # hauteur de diéléctrique en dessous du cube
-thick_func = 0 # si fonctionalisation, alors différent de 0
-#thick_gold = 20 # hauteur de l'or au dessus du substrat
-thick_cr = 0 # si chrome, alors différent de 0
+#width_reso = 40 # largeur du cube
+#thick_reso = width_reso #hauteur du cube
+thick_gap = 5 # hauteur de diéléctrique en dessous du cube
+thick_func = 4 # si fonctionalisation, alors différent de 0
+#thick_gold = 5 # hauteur de l'or au dessus du substrat
+#thick_cr = 1 # si chrome, alors différent de 0
 period = 500.2153 # periode
 thick_sub = 200
 
 # A modifier selon le point de fonctionnement
-#wavelength = 800.021635
+#wavelength = 700.021635
 angle = 0
 polarization = 1
 
@@ -459,199 +458,26 @@ perm_dielec = 1.45 ** 2 # spacer
 perm_Glass = 1.5 ** 2 # substrat
 #perm_Ag = epsAgbb(wavelength) # argent
 #perm_Au = epsAubb(wavelength) # or
-#perm_Cr = epsCrbb(wavelength)
+#perm_CR = 1.
 
 n_mod = 100 
 n_mod_total = 2 * n_mod + 1
 
-### Startstudies
+### Optimisation 
+budget = 100
+Npop = 30
+bornes = np.array([[30,100], [5,30], [1,5]])
 
-# plt.subplot(212)
-# plt.plot(list_wavelength, phase_R_up_NR, "r", label="phase R up NR")
-# plt.plot(list_wavelength, phase_R_down_NR, "b", label="phase R down NR")
-# plt.legend()
-# plt.xlabel("Wavelength (nm) ")
-# plt.ylabel("Phase of reflectance")
-# plt.title("Wavelength dependance")
-# plt.show(block=False)
-# plt.savefig("reflectance_dependanceWavelength_ref_dessus_dessous_phase_module.jpg")
-
-## Etude de la dépendance de la réflexion à la longueur d'onde, en fonction de l'épaisseur de gold
-# thick_gold0 = 0
-# thick_gold10 = 10
-# thick_gold20 = 20
-# thick_gold30 = 30
-# thick_gold40 = 40 
-# thick_gold50 = 50
-# thick_gold100 = 100
-# thick_gold200 = 200
-
-# list_wavelength = np.linspace(750, 1200, 200)
-# R_gold0 = np.empty(list_wavelength.size)
-# R_gold10 = np.empty(list_wavelength.size)
-# R_gold20 = np.empty(list_wavelength.size)
-# R_gold30 = np.empty(list_wavelength.size)
-# R_gold40 = np.empty(list_wavelength.size)
-# R_gold50 = np.empty(list_wavelength.size)
-# R_gold100 = np.empty(list_wavelength.size)
-# R_gold200 = np.empty(list_wavelength.size)
-# idx = 0
-
-# geometry0 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold0, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-# geometry10 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold10, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-# geometry20 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold20, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-# geometry30 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold30, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-# geometry40 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold40, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-# geometry50 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold50, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-# geometry100 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold100, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-# geometry200 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold200, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-
-
-# for wavelength in list_wavelength:
-#     perm_Ag = epsAgbb(wavelength)
-#     perm_Au = epsAubb(wavelength)
-#     perm_Cr = epsCrbb(wavelength)
-#     materials = {"perm_env": perm_env, "perm_dielec": perm_dielec, "perm_Glass": perm_Glass, "perm_Ag": perm_Ag, "perm_Au": perm_Au, "perm_Cr": perm_Cr}
-#     wave = {"wavelength": wavelength, "angle": angle, "polarization": polarization}
-#     R_gold0[idx] = reflectance(geometry0, wave, materials, n_mod)
-#     R_gold10[idx] = reflectance(geometry10, wave, materials, n_mod)
-#     R_gold20[idx] = reflectance(geometry20, wave, materials, n_mod)
-#     R_gold30[idx] = reflectance(geometry30, wave, materials, n_mod)
-#     R_gold40[idx] = reflectance(geometry40, wave, materials, n_mod)
-#     R_gold50[idx] = reflectance(geometry50, wave, materials, n_mod)
-#     R_gold100[idx] = reflectance(geometry100, wave, materials, n_mod)
-#     R_gold200[idx] = reflectance(geometry200, wave, materials, n_mod)
-#     idx += 1
-
-# plt.figure(1)
-# plt.plot(list_wavelength, R_gold0, "r", label="R gold 0")
-# plt.plot(list_wavelength, R_gold10, "b", label="R gold 10")
-# plt.plot(list_wavelength, R_gold20, "k", label="R gold 20")
-# plt.plot(list_wavelength, R_gold30, "g", label="R gold 30")
-# plt.plot(list_wavelength, R_gold40, "r", label="R gold 40")
-# plt.plot(list_wavelength, R_gold50, "m", label="R gold 50")
-# plt.plot(list_wavelength, R_gold100, "y", label = "R gold 100")
-# plt.plot(list_wavelength, R_gold200, "0.7", label="R gold 200")
-# plt.legend()
-# plt.xlabel("Wavelength (nm) ")
-# plt.ylabel("Module of reflectance")
-# plt.title("Wavelength dependance, gold thickness dependance")
-# plt.show(block=False)
-# plt.savefig("startstudies/reflectance_dependanceWavelength_ThicknessGold.jpg")
-
-
-## influence largeur du résonateur
-# list_width_reso = np.linspace(45, 350, 100)
-# R_up = np.empty(list_width_reso.size)
-# R_down = np.empty(list_width_reso.size)
-# idx = 0
-
-# materials = {"perm_env": perm_env, "perm_dielec": perm_dielec, "perm_Glass": perm_Glass, "perm_Ag": perm_Ag, "perm_Au": perm_Au, "perm_Cr": perm_Cr}
-# wave = {"wavelength": wavelength, "angle": angle, "polarization": polarization}
-
-# for width_reso in list_width_reso:
-#     geometry = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-#     R_down[idx], R_up[idx] = reflectance(geometry, wave, materials, n_mod)
-#     idx += 1
-
-# plt.figure(1)
-# plt.plot(list_width_reso, R_down)
-# plt.xlabel("Width of the rod (nm)")
-# plt.ylabel("R down")
-# plt.show(block=False)
-# plt.title("Cavity size dependance of the reflection")
-# plt.savefig("startstudies/r0_Lc_Rdown.jpg")
-
-# plt.figure(2)
-# plt.plot(list_width_reso, R_up)
-# plt.xlabel("Width of the rod (nm)")
-# plt.ylabel("R up")
-# plt.show(block=False)
-# plt.title("Cavity size dependance of the reflection")
-# plt.savefig("startstudies/r0_Lc_Rup.jpg")
-
-# list_wavelength = np.linspace(750, 1500, 500)
-# R_up = np.empty(list_wavelength.size)
-# R_down = np.empty(list_wavelength.size)
-# R_up_phase = np.empty(list_wavelength.size)
-# R_down_phase = np.empty(list_wavelength.size)
-# T_up = np.empty(list_wavelength.size)
-# T_down = np.empty(list_wavelength.size)
-# T_up_phase = np.empty(list_wavelength.size)
-# T_down_phase = np.empty(list_wavelength.size)
-# idx = 0
-
-# geometry = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-
-# for wavelength in list_wavelength:
-#     perm_Ag = epsAgbb(wavelength)
-#     perm_Au = epsAubb(wavelength)
-#     perm_Cr = epsCrbb(wavelength)
-#     materials = {"perm_env": perm_env, "perm_dielec": perm_dielec, "perm_Glass": perm_Glass, "perm_Ag": perm_Ag, "perm_Au": perm_Au, "perm_Cr": perm_Cr}
-#     wave = {"wavelength": wavelength, "angle": angle, "polarization": polarization}
-#     R_down[idx], R_down_phase[idx], R_up[idx], R_up_phase[idx], T_down[idx], T_down_phase[idx], T_up[idx], T_up_phase[idx] = reflectance(geometry, wave, materials, n_mod)
-#     idx += 1
-
-# plt.figure(3)
-# plt.title("Wavelength dependance of the reflection")
-
-# #plt.subplot(211)
-# plt.plot(list_wavelength, R_up, "r", label = "R up")
-# plt.plot(list_wavelength, R_down, "b", label = "R down")
-# plt.plot(list_wavelength, T_up, "g", label = "T up")
-# plt.plot(list_wavelength, T_down, "k", label = "T down")
-# plt.legend()
-# plt.ylabel("Coefficients")
-
-# # plt.subplot(212)
-# # plt.plot(list_wavelength, R_up_phase, "r", label = "R up")
-# # plt.plot(list_wavelength, R_down_phase, "b", label = "R down")
-# # plt.plot(list_wavelength, T_up_phase, "g", label = "T up")
-# # plt.plot(list_wavelength, T_down_phase, "k", label = "T down")
-# # plt.legend()
-# # plt.xlabel("Wavelength (nm)")
-# # plt.ylabel("Phases")
-
-# plt.show(block=False)
-# plt.savefig("startstudies/ref_wav_all_coeffs.jpg")
-
-### Influence de l'angle d'incidence
-# list_wavelength = np.linspace(750, 1200, 100)
-# R_theta0 = np.empty(list_wavelength.size)
-# R_theta20 = np.empty(list_wavelength.size)
-# R_theta0_phase = np.empty(list_wavelength.size)
-# R_theta20_phase = np.empty(list_wavelength.size)
-# idx = 0
-
-# geometry = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-
-# for wavelength in list_wavelength:
-#     perm_Ag = epsAgbb(wavelength) # argent
-#     perm_Au = epsAubb(wavelength)
-#     perm_Cr = epsCrbb(wavelength)
-#     materials = {"perm_env": perm_env, "perm_dielec": perm_dielec, "perm_Glass": perm_Glass, "perm_Ag": perm_Ag, "perm_Au": perm_Au, "perm_Cr": perm_Cr}
-#     wave_theta0 = {"wavelength": wavelength, "angle": 0, "polarization": polarization}
-#     wave_theta20 = {"wavelength": wavelength, "angle": 20, "polarization": polarization}
-#     R_theta0[idx], R_theta0_phase[idx] = reflectance(geometry, wave_theta0, materials, n_mod)
-#     R_theta20[idx], R_theta20_phase[idx] = reflectance(geometry, wave_theta20, materials, n_mod)
-#     idx += 1
-
-# plt.figure(2)
-# plt.title("Reflectance depending incidence angle")
-# plt.subplot(211)
-# plt.plot(list_wavelength, R_theta0, label = "Normal incidence")
-# plt.plot(list_wavelength, R_theta20, label = "20° incidence")
-# plt.legend()
-# plt.ylabel("Modulus")
-
-# plt.subplot(212)
-# plt.plot(list_wavelength, R_theta0_phase, label = "Normal incidence")
-# plt.plot(list_wavelength, R_theta20_phase, label = "20° incidence")
-# plt.legend()
-# plt.xlabel("Wavelength (nm)")
-# plt.ylabel("Phase")
-# plt.show(block=False)
-# plt.savefig("startstudies/reflectance_wav_inc0_inc20.jpg")
+Ngen = int(budget/Npop)
+F1 = 0.9
+F2 = 0.8
+cf = np.empty(Npop)
+conv = np.empty(Ngen)
+Nparam = int(bornes.size / 2)
+x = np.random.rand(Nparam, Npop) # initialize matrix with all the parameters. One line = one parameter
+for k in range(Nparam):
+    x[k] = bornes[k,0] + (bornes[k,1] - bornes[k,0]) * x[k]
+arr = np.empty((Npop, Nparam))
 
 
 ## Etude de la dépendance de la réflexion à la longueur d'onde
