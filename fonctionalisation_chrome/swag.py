@@ -305,13 +305,13 @@ def reflectance(geometry, wave, materials, n_mod):
     #Rdown = abs(S[n + position_down, n + position_down]) ** 2 
     Rdown = abs(S[n + n_mod, n + n_mod]) ** 2 
     # transmission quand on éclaire par le dessous
-    Tdown = abs(S[n_mod, n + n_mod]) ** 2 / np.real(Vdown[n_mod]) * perm_Glass * k0 * np.cos(angle) / perm_env
+    #Tdown = abs(S[n_mod, n + n_mod]) ** 2 / np.real(Vdown[n_mod]) * perm_Glass * k0 * np.cos(angle) / perm_env
 
     # calcul des phases du coefficient de réflexion
-    phase_R_up = np.angle(S[n_mod, n_mod])
-    phase_R_down = np.angle(S[n + n_mod, n + n_mod])
-    phase_T_up = np.angle(S[n + n_mod, n_mod])
-    phase_T_down = np.angle(S[n_mod, n + n_mod])
+    #phase_R_up = np.angle(S[n_mod, n_mod])
+    #phase_R_down = np.angle(S[n + n_mod, n + n_mod])
+    #phase_T_up = np.angle(S[n + n_mod, n_mod])
+    #phase_T_down = np.angle(S[n_mod, n + n_mod])
     return Rdown#, Rup #phase_R_down#, Rup, phase_R_up#, Tdown, phase_T_down, Tup, phase_T_up
 
 def Field_grating(thick_up, thick_down, thick_gap, thick_reso, thick_gold, period, wavelength, angle, polarization, perm_dielec, perm_Ag, n_mod):
@@ -439,12 +439,12 @@ def Field_grating(thick_up, thick_down, thick_gap, thick_reso, thick_gold, perio
 
 ### Swag-structure
 thick_super = 200
-width_reso = 75 # largeur du cube
-thick_reso = 75 # width_reso #hauteur du cube
+width_reso = 70 # largeur du cube
+thick_reso = width_reso # width_reso #hauteur du cube
 thick_gap = 10 # hauteur de diéléctrique en dessous du cube
-thick_func = 0 # si fonctionalisation, alors différent de 0
-#thick_gold = 20 # hauteur de l'or au dessus du substrat
-thick_cr = 0 # si chrome, alors différent de 0
+#thick_func = 3 # si fonctionalisation, alors différent de 0
+thick_gold = 20 # hauteur de l'or au dessus du substrat
+thick_cr = 1 # couche d'accroche 
 period = 500.2153 # periode
 thick_sub = 200
 
@@ -463,6 +463,364 @@ perm_Glass = 1.5 ** 2 # substrat
 
 n_mod = 100 
 n_mod_total = 2 * n_mod + 1
+
+## Etude de la dépendance de la réflexion à la longueur d'onde, influence de l'épaisseur de fonctionalisation
+thick_func1 = 1
+thick_func2 = 2
+thick_func3 = 3
+thick_func4 = 4
+
+list_wavelength = np.linspace(900, 1000, 200)
+R_func1 = np.empty(list_wavelength.size)
+R_nofunc = np.empty(list_wavelength.size)
+R_func2 = np.empty(list_wavelength.size)
+R_func3 = np.empty(list_wavelength.size)
+R_func4 = np.empty(list_wavelength.size)
+idx = 0
+
+geometry_func1 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func1, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+geometry_nofunc = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+geometry_func2 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func2, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+geometry_func3 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func3, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+geometry_func4 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func4, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+
+for wavelength in list_wavelength:
+    perm_Ag = epsAgbb(wavelength) # argent
+    perm_Au = epsAubb(wavelength)
+    perm_Cr = epsCrbb(wavelength)
+    materials = {"perm_env": perm_env, "perm_dielec": perm_dielec, "perm_Glass": perm_Glass, "perm_Ag": perm_Ag, "perm_Au": perm_Au, "perm_Cr": perm_Cr}
+    wave = {"wavelength": wavelength, "angle": angle, "polarization": polarization}
+    R_func1[idx] = reflectance(geometry_func1, wave, materials, n_mod)
+    R_nofunc[idx] = reflectance(geometry_nofunc, wave, materials, n_mod)
+    R_func2[idx] = reflectance(geometry_func2, wave, materials, n_mod)
+    R_func3[idx] = reflectance(geometry_func3, wave, materials, n_mod)
+    R_func4[idx] = reflectance(geometry_func4, wave, materials, n_mod)
+    idx += 1
+
+plt.figure(0)
+plt.plot(list_wavelength, R_func1, label = "func 1")
+plt.plot(list_wavelength, R_nofunc, label = "func 0")
+plt.plot(list_wavelength, R_func2, label = "func 2")
+plt.plot(list_wavelength, R_func3, label = "func 3")
+plt.plot(list_wavelength, R_func4, label = "func 4")
+plt.legend()
+plt.ylabel("Reflectance")
+plt.title("Dependance of thickness functionalization")
+plt.xlabel("Wavelength (nm)")
+
+plt.show(block=False)
+plt.savefig("width_func_dep/reflectance_wav_func_nofunc_All.jpg")
+
+# ## Etude de la dépendance de la réflexion à la longueur d'onde, influence de la dimension du résonateur
+# thick_reso30 = 30
+# thick_reso40 = 40
+# thick_reso50 = 50
+# thick_reso60 = 60
+# thick_reso70 = 70
+
+# width_reso30 = 30
+# width_reso40 = 40
+# width_reso50 = 50
+# width_reso60 = 60
+# width_reso70 = 70
+
+# list_wavelength = np.linspace(750, 1100, 200)
+# R_reso30_func = np.empty(list_wavelength.size)
+# R_reso30_nofunc = np.empty(list_wavelength.size)
+# R_reso40_func = np.empty(list_wavelength.size)
+# R_reso40_nofunc = np.empty(list_wavelength.size)
+# R_reso50_func = np.empty(list_wavelength.size)
+# R_reso50_nofunc = np.empty(list_wavelength.size)
+# R_reso60_func = np.empty(list_wavelength.size)
+# R_reso60_nofunc = np.empty(list_wavelength.size)
+# R_reso70_func = np.empty(list_wavelength.size)
+# R_reso70_nofunc = np.empty(list_wavelength.size)
+# idx = 0
+
+# geometry_reso30_func = {"thick_super": thick_super, "width_reso": width_reso30, "thick_reso": thick_reso30, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_reso30_nofunc = {"thick_super": thick_super, "width_reso": width_reso30, "thick_reso": thick_reso30, "thick_gap": thick_gap, "thick_func": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_reso40_func = {"thick_super": thick_super, "width_reso": width_reso40, "thick_reso": thick_reso40, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_reso40_nofunc = {"thick_super": thick_super, "width_reso": width_reso40, "thick_reso": thick_reso40, "thick_gap": thick_gap, "thick_func": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_reso50_func = {"thick_super": thick_super, "width_reso": width_reso50, "thick_reso": thick_reso50, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_reso50_nofunc = {"thick_super": thick_super, "width_reso": width_reso50, "thick_reso": thick_reso50, "thick_gap": thick_gap, "thick_func": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_reso60_func = {"thick_super": thick_super, "width_reso": width_reso60, "thick_reso": thick_reso60, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_reso60_nofunc = {"thick_super": thick_super, "width_reso": width_reso60, "thick_reso": thick_reso60, "thick_gap": thick_gap, "thick_func": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_reso70_func = {"thick_super": thick_super, "width_reso": width_reso70, "thick_reso": thick_reso70, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_reso70_nofunc = {"thick_super": thick_super, "width_reso": width_reso70, "thick_reso": thick_reso70, "thick_gap": thick_gap, "thick_func": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+
+# for wavelength in list_wavelength:
+#     perm_Ag = epsAgbb(wavelength) # argent
+#     perm_Au = epsAubb(wavelength)
+#     perm_Cr = epsCrbb(wavelength)
+#     materials = {"perm_env": perm_env, "perm_dielec": perm_dielec, "perm_Glass": perm_Glass, "perm_Ag": perm_Ag, "perm_Au": perm_Au, "perm_Cr": perm_Cr}
+#     wave = {"wavelength": wavelength, "angle": angle, "polarization": polarization}
+#     R_reso30_func[idx] = reflectance(geometry_reso30_func, wave, materials, n_mod)
+#     R_reso30_nofunc[idx] = reflectance(geometry_reso30_nofunc, wave, materials, n_mod)
+#     R_reso40_func[idx] = reflectance(geometry_reso40_func, wave, materials, n_mod)
+#     R_reso40_nofunc[idx] = reflectance(geometry_reso40_nofunc, wave, materials, n_mod)
+#     R_reso50_func[idx] = reflectance(geometry_reso50_func, wave, materials, n_mod)
+#     R_reso50_nofunc[idx] = reflectance(geometry_reso50_nofunc, wave, materials, n_mod)
+#     R_reso60_func[idx] = reflectance(geometry_reso60_func, wave, materials, n_mod)
+#     R_reso60_nofunc[idx] = reflectance(geometry_reso60_nofunc, wave, materials, n_mod)
+#     R_reso70_func[idx] = reflectance(geometry_reso70_func, wave, materials, n_mod)
+#     R_reso70_nofunc[idx] = reflectance(geometry_reso70_nofunc, wave, materials, n_mod)
+#     idx += 1
+
+# plt.figure(1)
+# plt.plot(list_wavelength, R_reso30_func, label = "Reso 30, with func")
+# plt.plot(list_wavelength, R_reso30_nofunc, label = "Reso 30 without func")
+# plt.plot(list_wavelength, R_reso40_func, label = "Reso 40, with func")
+# plt.plot(list_wavelength, R_reso40_nofunc, label = "Reso 40 without func")
+# plt.plot(list_wavelength, R_reso50_func, label = "Reso 50, with func")
+# plt.plot(list_wavelength, R_reso50_nofunc, label = "Reso 50 without func")
+# plt.plot(list_wavelength, R_reso60_func, label = "Reso 60, with func")
+# plt.plot(list_wavelength, R_reso60_nofunc, label = "Reso 60 without func")
+# plt.plot(list_wavelength, R_reso70_func, label = "Reso 70, with func")
+# plt.plot(list_wavelength, R_reso70_nofunc, label = "Reso 70 without func")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Dependance of dimension resonator")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("width_resonator_dep/reflectance_wav_func_nofunc_widthResoAll.jpg")
+
+# plt.figure(30)
+# plt.plot(list_wavelength, R_reso30_func, label = "Reso 30, with func")
+# plt.plot(list_wavelength, R_reso30_nofunc, label = "Reso 30 without func")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Dependance of width resonator")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("width_resonator_dep/reflectance_wav_func_nofunc_widthReso30.jpg")
+
+# plt.figure(40)
+# plt.plot(list_wavelength, R_reso40_func, label = "Reso 40, with func")
+# plt.plot(list_wavelength, R_reso40_nofunc, label = "Reso 40 without func")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Dependance of width resonator")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("width_resonator_dep/reflectance_wav_func_nofunc_widthReso40.jpg")
+
+# plt.figure(50)
+# plt.plot(list_wavelength, R_reso50_func, label = "Reso 50, with func")
+# plt.plot(list_wavelength, R_reso50_nofunc, label = "Reso 50 without func")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Dependance of width resonator")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("width_resonator_dep/reflectance_wav_func_nofunc_widthReso50.jpg")
+
+# plt.figure(60)
+# plt.plot(list_wavelength, R_reso60_func, label = "Reso 60, with func")
+# plt.plot(list_wavelength, R_reso60_nofunc, label = "Reso 60 without func")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Dependance of width resonator")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("width_resonator_dep/reflectance_wav_func_nofunc_widthReso60.jpg")
+
+# plt.figure(70)
+# plt.plot(list_wavelength, R_reso70_func, label = "Reso 70, with func")
+# plt.plot(list_wavelength, R_reso70_nofunc, label = "Reso 70 without func")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Dependance of width resonator")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("width_resonator_dep/reflectance_wav_func_nofunc_widthReso70.jpg")
+
+# ## Etude de la dépendance de la réflexion à la longueur d'onde, influence de la couche d'or
+# thick_gold5 = 5
+# thick_gold10 = 10
+# thick_gold15 = 15
+# thick_gold20 = 20
+# thick_gold25 = 25
+
+# list_wavelength = np.linspace(750, 1100, 200)
+# R_gold5_func = np.empty(list_wavelength.size)
+# R_gold5_nofunc = np.empty(list_wavelength.size)
+# R_gold10_func = np.empty(list_wavelength.size)
+# R_gold10_nofunc = np.empty(list_wavelength.size)
+# R_gold15_func = np.empty(list_wavelength.size)
+# R_gold15_nofunc = np.empty(list_wavelength.size)
+# R_gold20_func = np.empty(list_wavelength.size)
+# R_gold20_nofunc = np.empty(list_wavelength.size)
+# R_gold25_func = np.empty(list_wavelength.size)
+# R_gold25_nofunc = np.empty(list_wavelength.size)
+# idx = 0
+
+# geometry_gold5_func = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold5, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gold5_nofunc = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": 0, "thick_gold": thick_gold5, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gold10_func = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold10, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gold10_nofunc = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": 0, "thick_gold": thick_gold10, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gold15_func = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold15, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gold15_nofunc = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": 0, "thick_gold": thick_gold15, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gold20_func = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold20, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gold20_nofunc = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": 0, "thick_gold": thick_gold20, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gold25_func = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold25, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gold25_nofunc = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": 0, "thick_gold": thick_gold25, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+
+# for wavelength in list_wavelength:
+#     perm_Ag = epsAgbb(wavelength) # argent
+#     perm_Au = epsAubb(wavelength)
+#     perm_Cr = epsCrbb(wavelength)
+#     materials = {"perm_env": perm_env, "perm_dielec": perm_dielec, "perm_Glass": perm_Glass, "perm_Ag": perm_Ag, "perm_Au": perm_Au, "perm_Cr": perm_Cr}
+#     wave = {"wavelength": wavelength, "angle": angle, "polarization": polarization}
+#     R_gold5_func[idx] = reflectance(geometry_gold5_func, wave, materials, n_mod)
+#     R_gold5_nofunc[idx] = reflectance(geometry_gold5_nofunc, wave, materials, n_mod)
+#     R_gold10_func[idx] = reflectance(geometry_gold10_func, wave, materials, n_mod)
+#     R_gold10_nofunc[idx] = reflectance(geometry_gold10_nofunc, wave, materials, n_mod)
+#     R_gold15_func[idx] = reflectance(geometry_gold15_func, wave, materials, n_mod)
+#     R_gold15_nofunc[idx] = reflectance(geometry_gold15_nofunc, wave, materials, n_mod)
+#     R_gold20_func[idx] = reflectance(geometry_gold20_func, wave, materials, n_mod)
+#     R_gold20_nofunc[idx] = reflectance(geometry_gold20_nofunc, wave, materials, n_mod)
+#     R_gold25_func[idx] = reflectance(geometry_gold25_func, wave, materials, n_mod)
+#     R_gold25_nofunc[idx] = reflectance(geometry_gold25_nofunc, wave, materials, n_mod)
+#     idx += 1
+
+# plt.figure(1)
+# plt.plot(list_wavelength, R_gold5_func, label = "Au 5, with func")
+# plt.plot(list_wavelength, R_gold5_nofunc, label = "Au 5 without func")
+# plt.plot(list_wavelength, R_gold10_func, label = "Au 10, with func")
+# plt.plot(list_wavelength, R_gold10_nofunc, label = "Au 10 without func")
+# plt.plot(list_wavelength, R_gold15_func, label = "Au 15, with func")
+# plt.plot(list_wavelength, R_gold15_nofunc, label = "Au 15 without func")
+# plt.plot(list_wavelength, R_gold20_func, label = "Au 20, with func")
+# plt.plot(list_wavelength, R_gold20_nofunc, label = "Au 20 without func")
+# plt.plot(list_wavelength, R_gold25_func, label = "Au 25, with func")
+# plt.plot(list_wavelength, R_gold25_nofunc, label = "Au 25 without func")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Dependance of width gold")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("width_gold_dep/reflectance_wav_func_nofunc_widthgoldAll.jpg")
+
+# plt.figure(5)
+# plt.plot(list_wavelength, R_gold5_func, label = "Au 5, with func")
+# plt.plot(list_wavelength, R_gold5_nofunc, label = "Au 5 without func")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Dependance of width gold")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("width_gold_dep/reflectance_wav_func_nofunc_widthgold5.jpg")
+
+# plt.figure(10)
+# plt.plot(list_wavelength, R_gold10_func, label = "Au 10, with func")
+# plt.plot(list_wavelength, R_gold10_nofunc, label = "Au 10 without func")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Dependance of width gold")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("width_gold_dep/reflectance_wav_func_nofunc_widthgold10.jpg")
+
+# plt.figure(15)
+# plt.plot(list_wavelength, R_gold15_func, label = "Au 15, with func")
+# plt.plot(list_wavelength, R_gold15_nofunc, label = "Au 15 without func")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Dependance of width gold")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("width_gold_dep/reflectance_wav_func_nofunc_widthgold15.jpg")
+
+# plt.figure(20)
+# plt.plot(list_wavelength, R_gold20_func, label = "Au 20, with func")
+# plt.plot(list_wavelength, R_gold20_nofunc, label = "Au 20 without func")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Dependance of width gold")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("width_gold_dep/reflectance_wav_func_nofunc_widthgold20.jpg")
+
+# plt.figure(25)
+# plt.plot(list_wavelength, R_gold25_func, label = "Au 25, with func")
+# plt.plot(list_wavelength, R_gold25_nofunc, label = "Au 25 without func")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Dependance of width gold")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("width_gold_dep/reflectance_wav_func_nofunc_widthgold25.jpg")
+
+## Etude de la dépendance de la réflexion à la longueur d'onde, influence du chrome
+# thick_cr0 = 0
+# thick_cr1 = 1
+# thick_cr2 = 2
+# thick_cr3 = 3
+
+# list_wavelength = np.linspace(750, 1100, 200)
+# R_cr0_func = np.empty(list_wavelength.size)
+# R_cr0_nofunc = np.empty(list_wavelength.size)
+# R_cr1_func = np.empty(list_wavelength.size)
+# R_cr1_nofunc = np.empty(list_wavelength.size)
+# R_cr2_func = np.empty(list_wavelength.size)
+# R_cr2_nofunc = np.empty(list_wavelength.size)
+# R_cr3_func = np.empty(list_wavelength.size)
+# R_cr3_nofunc = np.empty(list_wavelength.size)
+# idx = 0
+
+# geometry_cr0_func = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr0, "period": period}
+# geometry_cr0_nofunc = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr0, "period": period}
+# geometry_cr1_func = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr1, "period": period}
+# geometry_cr1_nofunc = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr1, "period": period}
+# geometry_cr2_func = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr2, "period": period}
+# geometry_cr2_nofunc = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr2, "period": period}
+# geometry_cr3_func = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr3, "period": period}
+# geometry_cr3_nofunc = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr3, "period": period}
+
+# for wavelength in list_wavelength:
+#     perm_Ag = epsAgbb(wavelength) # argent
+#     perm_Au = epsAubb(wavelength)
+#     perm_Cr = epsCrbb(wavelength)
+#     materials = {"perm_env": perm_env, "perm_dielec": perm_dielec, "perm_Glass": perm_Glass, "perm_Ag": perm_Ag, "perm_Au": perm_Au, "perm_Cr": perm_Cr}
+#     wave = {"wavelength": wavelength, "angle": angle, "polarization": polarization}
+#     R_cr0_func[idx] = reflectance(geometry_cr0_func, wave, materials, n_mod)
+#     R_cr0_nofunc[idx] = reflectance(geometry_cr0_nofunc, wave, materials, n_mod)
+#     R_cr1_func[idx] = reflectance(geometry_cr1_func, wave, materials, n_mod)
+#     R_cr1_nofunc[idx] = reflectance(geometry_cr1_nofunc, wave, materials, n_mod)
+#     R_cr2_func[idx] = reflectance(geometry_cr2_func, wave, materials, n_mod)
+#     R_cr2_nofunc[idx] = reflectance(geometry_cr2_nofunc, wave, materials, n_mod)
+#     R_cr3_func[idx] = reflectance(geometry_cr3_func, wave, materials, n_mod)
+#     R_cr3_nofunc[idx] = reflectance(geometry_cr3_nofunc, wave, materials, n_mod)
+#     idx += 1
+
+# plt.figure(3)
+# plt.plot(list_wavelength, R_cr0_func, label = "Cr 0, with func")
+# plt.plot(list_wavelength, R_cr0_nofunc, label = "Cr 0 without func")
+# plt.plot(list_wavelength, R_cr1_func, label = "Cr 1, with func")
+# plt.plot(list_wavelength, R_cr1_nofunc, label = "Cr 1 without func")
+# plt.plot(list_wavelength, R_cr2_func, label = "Cr 2, with func")
+# plt.plot(list_wavelength, R_cr2_nofunc, label = "Cr 2 without func")
+# plt.plot(list_wavelength, R_cr3_func, label = "Cr 3, with func")
+# plt.plot(list_wavelength, R_cr3_nofunc, label = "Cr 3 without func")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Dependance of width chrome")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("width_chrome_dep/reflectance_wav_func_nofunc_widthchromeAll.jpg")
 
 ### Startstudies
 
@@ -655,7 +1013,7 @@ n_mod_total = 2 * n_mod + 1
 
 
 ## Etude de la dépendance de la réflexion à la longueur d'onde
-# list_wavelength = np.linspace(600, 900, 100)
+# list_wavelength = np.linspace(750, 1100, 200)
 # R_cr_func = np.empty(list_wavelength.size)
 # R_cr_nofunc = np.empty(list_wavelength.size)
 # R_nocr_func = np.empty(list_wavelength.size)
@@ -676,10 +1034,10 @@ n_mod_total = 2 * n_mod + 1
 #     perm_Cr = epsCrbb(wavelength)
 #     materials = {"perm_env": perm_env, "perm_dielec": perm_dielec, "perm_Glass": perm_Glass, "perm_Ag": perm_Ag, "perm_Au": perm_Au, "perm_Cr": perm_Cr}
 #     wave = {"wavelength": wavelength, "angle": angle, "polarization": polarization}
-#     R_cr_func[idx], phi = reflectance(geometry_cr_func, wave, materials, n_mod)
-#     R_cr_nofunc[idx], phi = reflectance(geometry_cr_nofunc, wave, materials, n_mod)
-#     R_nocr_func[idx], phi = reflectance(geometry_nocr_func, wave, materials, n_mod)
-#     R_nocr_nofunc[idx], phi = reflectance(geometry_nocr_nofunc, wave, materials, n_mod)
+#     R_cr_func[idx] = reflectance(geometry_cr_func, wave, materials, n_mod)
+#     R_cr_nofunc[idx] = reflectance(geometry_cr_nofunc, wave, materials, n_mod)
+#     R_nocr_func[idx] = reflectance(geometry_nocr_func, wave, materials, n_mod)
+#     R_nocr_nofunc[idx] = reflectance(geometry_nocr_nofunc, wave, materials, n_mod)
 #     idx += 1
 
 # plt.figure(3)
@@ -691,7 +1049,7 @@ n_mod_total = 2 * n_mod + 1
 
 # plt.legend()
 # plt.ylabel("Reflectance")
-# plt.title("Width chrome = 1 nm, width func = 4 nm")
+# plt.title("Width chrome = 1 nm, width func = 3 nm")
 
 # # plt.subplot(212)
 # # plt.plot(list_wavelength, Rphase, label = "with func") 
@@ -701,7 +1059,7 @@ n_mod_total = 2 * n_mod + 1
 # # plt.ylabel("Phase of reflectance")
 
 # plt.show(block=False)
-# plt.savefig("reflectance_wav_func_nofunc_chrome_nocr_gold5.jpg")
+# plt.savefig("reflectance_wav_func_nofunc_chrome_nocr.jpg")
 
 # ### Etude de la permittivité du chrome
 
