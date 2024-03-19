@@ -250,6 +250,7 @@ def reflectance(geometry, wave, materials, n_mod):
     thick_reso = geometry["thick_reso"] / period
     thick_gap = geometry["thick_gap"] / period
     thick_func = geometry["thick_func"] / period
+    thick_mol = geometry["thick_mol"] / period
     thick_gold = geometry["thick_gold"] / period
     thick_sub = geometry["thick_sub"] / period
     thick_chrome = geometry["thick_chrome"] / period 
@@ -265,6 +266,8 @@ def reflectance(geometry, wave, materials, n_mod):
     perm_Au =  materials["perm_Au"]
     perm_Cr = materials["perm_Cr"]
 
+    pos_reso = np.array([[width_reso, (1 - width_reso) / 2]])
+
     n = 2 * n_mod + 1
 
     k0 = 2 * np.pi / wavelength
@@ -273,28 +276,42 @@ def reflectance(geometry, wave, materials, n_mod):
     Pup, Vup = homogene(k0, a0,polarization, perm_env, n)
     S = np.block([[np.zeros([n, n]), np.eye(n, dtype=np.complex128)], [np.eye(n), np.zeros([n, n])]])
 
-    P1, V1 = grating(k0, a0, polarization, perm_env, perm_Ag, n, np.array([[width_reso, (1 - width_reso) / 2]]))
-    S = cascade(S, interface(Pup, P1))
-    S = c_bas(S, V1, thick_reso)
-
-    P2, V2 = grating(k0, a0, polarization, perm_env, perm_dielec, n, np.array([[width_reso, (1 - width_reso) / 2]]))
-    S = cascade(S, interface(P1, P2))
-    S = c_bas(S, V2, thick_gap - thick_func)
-
-    P3, V3 = homogene(k0, a0, polarization, perm_dielec, n)
-    S = cascade(S, interface(P2, P3))
-    S = c_bas(S, V3, thick_func)
+    if thick_mol < (thick_gap - thick_func):
+        P1, V1 = grating(k0, a0, polarization, perm_env, perm_Ag, n, pos_reso)
+        S = cascade(S, interface(Pup, P1))
+        S = c_bas(S, V1, thick_reso)
     
-    P4, V4 = homogene(k0, a0, polarization, perm_Au, n)
-    S = cascade(S, interface(P3, P4))
-    S = c_bas(S, V4, thick_gold)
+        P2, V2 = grating(k0, a0, polarization, perm_env, perm_dielec, n, pos_reso)
+        S = cascade(S, interface(P1, P2))
+        S = c_bas(S, V2, thick_gap - (thick_mol + thick_func))
 
-    P5, V5 = homogene(k0, a0, polarization, perm_Cr, n)
-    S = cascade(S, interface(P4, P5))
-    S = c_bas(S, V5, thick_chrome)
+        P3, V3 = homogene(k0, a0, polarization, perm_dielec, n)
+        S = cascade(S, interface(P2, P3))
+        S = c_bas(S, V3, thick_mol + thick_func)
+
+    else:
+        P1, V1 = grating(k0, a0, polarization, perm_env, perm_Ag, n, pos_reso)
+        S = cascade(S, interface(Pup, P1))
+        S = c_bas(S, V1, thick_reso - (thick_mol - (thick_gap - thick_func)))
+
+        P2, V2 = grating(k0, a0, polarization, perm_dielec, perm_Ag, n, pos_reso)
+        S = cascade(S, interface(P1, P2))
+        S = c_bas(S, V2, thick_mol - (thick_gap - thick_func))
+
+        P3, V3 = homogene(k0, a0, polarization, perm_dielec, n)
+        S = cascade(S, interface(P2, P3))
+        S = c_bas(S, V3, thick_gap)
+
+    Pgold, Vgold = homogene(k0, a0, polarization, perm_Au, n)
+    S = cascade(S, interface(P3, Pgold))
+    S = c_bas(S, Vgold, thick_gold)
+
+    Pcr, Vcr = homogene(k0, a0, polarization, perm_Cr, n)
+    S = cascade(S, interface(Pgold, Pcr))
+    S = c_bas(S, Vcr, thick_chrome)
 
     Pdown, Vdown = homogene(k0, a0, polarization, perm_Glass, n)
-    S = cascade(S, interface(P5, Pdown))
+    S = cascade(S, interface(Pcr, Pdown))
     S = c_bas(S, Vdown, thick_sub)
 
     # reflexion quand on eclaire par le dessus
@@ -441,8 +458,9 @@ def Field_grating(thick_up, thick_down, thick_gap, thick_reso, thick_gold, perio
 thick_super = 200
 width_reso = 70 # largeur du cube
 thick_reso = width_reso # width_reso #hauteur du cube
-thick_gap = 10 # hauteur de diéléctrique en dessous du cube
-#thick_func = 3 # si fonctionalisation, alors différent de 0
+thick_gap = 3 # hauteur de diéléctrique en dessous du cube
+thick_func = 1 # présent partout tout le temps
+#thick_mol = 2 # si molécules détectées
 thick_gold = 20 # hauteur de l'or au dessus du substrat
 thick_cr = 1 # couche d'accroche 
 period = 500.2153 # periode
@@ -464,25 +482,30 @@ perm_Glass = 1.5 ** 2 # substrat
 n_mod = 100 
 n_mod_total = 2 * n_mod + 1
 
-## Etude de la dépendance de la réflexion à la longueur d'onde, influence de l'épaisseur de fonctionalisation
-thick_func1 = 1
-thick_func2 = 2
-thick_func3 = 3
-thick_func4 = 4
+## Etude de la dépendance de la réflexion à la longueur d'onde, influence de l'épaisseur de molécules
+thick_mol0 = 0
+thick_mol1 = 1
+thick_mol2 = 2
+thick_mol3 = 3
+thick_mol4 = 4
+thick_mol5 = 5
 
-list_wavelength = np.linspace(900, 1000, 200)
-R_func1 = np.empty(list_wavelength.size)
-R_nofunc = np.empty(list_wavelength.size)
-R_func2 = np.empty(list_wavelength.size)
-R_func3 = np.empty(list_wavelength.size)
-R_func4 = np.empty(list_wavelength.size)
+list_wavelength = np.linspace(1100, 1400, 200)
+R_mol0 = np.empty(list_wavelength.size)
+R_mol1 = np.empty(list_wavelength.size)
+R_mol2 = np.empty(list_wavelength.size)
+R_mol3 = np.empty(list_wavelength.size)
+R_mol4 = np.empty(list_wavelength.size)
+R_mol5 = np.empty(list_wavelength.size)
+
 idx = 0
 
-geometry_func1 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func1, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-geometry_nofunc = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-geometry_func2 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func2, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-geometry_func3 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func3, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-geometry_func4 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func4, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+geometry_mol0 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func,"thick_mol": thick_mol0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+geometry_mol1 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func,"thick_mol": thick_mol1, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+geometry_mol2 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func,"thick_mol": thick_mol2, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+geometry_mol3 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func,"thick_mol": thick_mol3, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+geometry_mol4 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func,"thick_mol": thick_mol4, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+geometry_mol5 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func,"thick_mol": thick_mol5, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
 
 for wavelength in list_wavelength:
     perm_Ag = epsAgbb(wavelength) # argent
@@ -490,26 +513,28 @@ for wavelength in list_wavelength:
     perm_Cr = epsCrbb(wavelength)
     materials = {"perm_env": perm_env, "perm_dielec": perm_dielec, "perm_Glass": perm_Glass, "perm_Ag": perm_Ag, "perm_Au": perm_Au, "perm_Cr": perm_Cr}
     wave = {"wavelength": wavelength, "angle": angle, "polarization": polarization}
-    R_func1[idx] = reflectance(geometry_func1, wave, materials, n_mod)
-    R_nofunc[idx] = reflectance(geometry_nofunc, wave, materials, n_mod)
-    R_func2[idx] = reflectance(geometry_func2, wave, materials, n_mod)
-    R_func3[idx] = reflectance(geometry_func3, wave, materials, n_mod)
-    R_func4[idx] = reflectance(geometry_func4, wave, materials, n_mod)
+    R_mol0[idx] = reflectance(geometry_mol0, wave, materials, n_mod)
+    R_mol1[idx] = reflectance(geometry_mol1, wave, materials, n_mod)
+    R_mol2[idx] = reflectance(geometry_mol2, wave, materials, n_mod)
+    R_mol3[idx] = reflectance(geometry_mol3, wave, materials, n_mod)
+    R_mol4[idx] = reflectance(geometry_mol4, wave, materials, n_mod)
+    R_mol5[idx] = reflectance(geometry_mol5, wave, materials, n_mod)
     idx += 1
 
-plt.figure(0)
-plt.plot(list_wavelength, R_func1, label = "func 1")
-plt.plot(list_wavelength, R_nofunc, label = "func 0")
-plt.plot(list_wavelength, R_func2, label = "func 2")
-plt.plot(list_wavelength, R_func3, label = "func 3")
-plt.plot(list_wavelength, R_func4, label = "func 4")
+plt.figure(2)
+plt.plot(list_wavelength, R_mol0, label = "No molecule")
+plt.plot(list_wavelength, R_mol1, label = "molecules 1 nm")
+plt.plot(list_wavelength, R_mol2, label = "molecules 2 nm")
+plt.plot(list_wavelength, R_mol3, label = "molecules 3 nm")
+plt.plot(list_wavelength, R_mol4, label = "molecules 4 nm")
+plt.plot(list_wavelength, R_mol5, label = "molecules 5 nm")
 plt.legend()
 plt.ylabel("Reflectance")
-plt.title("Dependance of thickness functionalization")
+plt.title("Molecules thickness") # reflectance (functionnalization thickness)
 plt.xlabel("Wavelength (nm)")
 
 plt.show(block=False)
-plt.savefig("width_func_dep/reflectance_wav_func_nofunc_All.jpg")
+plt.savefig("spacer3/thickness_mol/reflectance_wav_mol_All_zoom.jpg")
 
 # ## Etude de la dépendance de la réflexion à la longueur d'onde, influence de la dimension du résonateur
 # thick_reso30 = 30
