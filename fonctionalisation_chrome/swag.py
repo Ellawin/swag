@@ -322,14 +322,14 @@ def reflectance(geometry, wave, materials, n_mod):
     #Rdown = abs(S[n + position_down, n + position_down]) ** 2 
     Rdown = abs(S[n + n_mod, n + n_mod]) ** 2 
     # transmission quand on éclaire par le dessous
-    #Tdown = abs(S[n_mod, n + n_mod]) ** 2 / np.real(Vdown[n_mod]) * perm_Glass * k0 * np.cos(angle) / perm_env
+    Tdown = abs(S[n_mod, n + n_mod]) ** 2 / np.real(Vdown[n_mod]) * perm_Glass * k0 * np.cos(angle) / perm_env
 
     # calcul des phases du coefficient de réflexion
     #phase_R_up = np.angle(S[n_mod, n_mod])
     #phase_R_down = np.angle(S[n + n_mod, n + n_mod])
     #phase_T_up = np.angle(S[n + n_mod, n_mod])
     #phase_T_down = np.angle(S[n_mod, n + n_mod])
-    return Rdown#, Rup #phase_R_down#, Rup, phase_R_up#, Tdown, phase_T_down, Tup, phase_T_up
+    return Rdown#, Rup, Tdown, Tup#, Rup #phase_R_down#, Rup, phase_R_up#, Tdown, phase_T_down, Tup, phase_T_up
 
 def Field_grating(thick_up, thick_down, thick_gap, thick_reso, thick_gold, period, wavelength, angle, polarization, perm_dielec, perm_Ag, n_mod):
     #material_list = [1., 'Silver']
@@ -460,10 +460,10 @@ width_reso = 70 # largeur du cube
 thick_reso = width_reso # width_reso #hauteur du cube
 thick_gap = 3 # hauteur de diéléctrique en dessous du cube
 thick_func = 1 # présent partout tout le temps
-#thick_mol = 2 # si molécules détectées
-thick_gold = 20 # hauteur de l'or au dessus du substrat
+thick_mol = 3 # si molécules détectées
+#thick_gold = 20 # hauteur de l'or au dessus du substrat
 thick_cr = 1 # couche d'accroche 
-period = 500.2153 # periode
+period = 300.2153 # periode
 thick_sub = 200
 
 # A modifier selon le point de fonctionnement
@@ -482,30 +482,51 @@ perm_Glass = 1.5 ** 2 # substrat
 n_mod = 100 
 n_mod_total = 2 * n_mod + 1
 
-## Etude de la dépendance de la réflexion à la longueur d'onde, influence de l'épaisseur de molécules
-thick_mol0 = 0
-thick_mol1 = 1
-thick_mol2 = 2
-thick_mol3 = 3
-thick_mol4 = 4
-thick_mol5 = 5
+## Etude de la dépendance de la réflexion à la longueur d'onde, influence de l'épaisseur d'or
+thick_gold0 = 0
+thick_gold10 = 10
+thick_gold20 = 20
+thick_gold30 = 30
+thick_gold40 = 40
+thick_gold50 = 50
+thick_gold100 = 100
+thick_gold200 = 200
 
-list_wavelength = np.linspace(1100, 1400, 200)
-R_mol0 = np.empty(list_wavelength.size)
-R_mol1 = np.empty(list_wavelength.size)
-R_mol2 = np.empty(list_wavelength.size)
-R_mol3 = np.empty(list_wavelength.size)
-R_mol4 = np.empty(list_wavelength.size)
-R_mol5 = np.empty(list_wavelength.size)
-
+list_wavelength = np.linspace(450, 2000, 200)
+R_gold0_mol = np.empty(list_wavelength.size)
+R_gold0_nomol = np.empty(list_wavelength.size)
+R_gold10_mol = np.empty(list_wavelength.size)
+R_gold10_nomol = np.empty(list_wavelength.size)
+R_gold20_mol = np.empty(list_wavelength.size)
+R_gold20_nomol = np.empty(list_wavelength.size)
+R_gold30_mol = np.empty(list_wavelength.size)
+R_gold30_nomol = np.empty(list_wavelength.size)
+R_gold40_mol = np.empty(list_wavelength.size)
+R_gold40_nomol = np.empty(list_wavelength.size)
+R_gold50_mol = np.empty(list_wavelength.size)
+R_gold50_nomol = np.empty(list_wavelength.size)
+R_gold100_mol = np.empty(list_wavelength.size)
+R_gold100_nomol = np.empty(list_wavelength.size)
+R_gold200_mol = np.empty(list_wavelength.size)
+R_gold200_nomol = np.empty(list_wavelength.size)
 idx = 0
 
-geometry_mol0 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func,"thick_mol": thick_mol0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-geometry_mol1 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func,"thick_mol": thick_mol1, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-geometry_mol2 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func,"thick_mol": thick_mol2, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-geometry_mol3 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func,"thick_mol": thick_mol3, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-geometry_mol4 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func,"thick_mol": thick_mol4, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-geometry_mol5 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func,"thick_mol": thick_mol5, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+geometry_gold0_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": thick_mol, "thick_gold": thick_gold0, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+geometry_gold0_nomol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap,"thick_func": thick_func, "thick_mol": 0, "thick_gold": thick_gold0, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+geometry_gold10_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap,"thick_func": thick_func, "thick_mol": thick_mol, "thick_gold": thick_gold10, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+geometry_gold10_nomol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap,"thick_func": thick_func, "thick_mol": 0, "thick_gold": thick_gold10, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+geometry_gold20_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap,"thick_func": thick_func, "thick_mol": thick_mol, "thick_gold": thick_gold20, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+geometry_gold20_nomol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap,"thick_func": thick_func, "thick_mol": 0, "thick_gold": thick_gold20, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+geometry_gold30_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap,"thick_func": thick_func, "thick_mol": thick_mol, "thick_gold": thick_gold30, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+geometry_gold30_nomol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap,"thick_func": thick_func, "thick_mol": 0, "thick_gold": thick_gold30, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+geometry_gold40_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": thick_mol, "thick_gold": thick_gold40, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+geometry_gold40_nomol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap,"thick_func": thick_func, "thick_mol": 0, "thick_gold": thick_gold40, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+geometry_gold50_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": thick_mol, "thick_gold": thick_gold50, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+geometry_gold50_nomol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap,"thick_func": thick_func, "thick_mol": 0, "thick_gold": thick_gold50, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+geometry_gold100_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": thick_mol, "thick_gold": thick_gold100, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+geometry_gold100_nomol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap,"thick_func": thick_func, "thick_mol": 0, "thick_gold": thick_gold100, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+geometry_gold200_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": thick_mol, "thick_gold": thick_gold200, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+geometry_gold200_nomol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap,"thick_func": thick_func, "thick_mol": 0, "thick_gold": thick_gold200, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
 
 for wavelength in list_wavelength:
     perm_Ag = epsAgbb(wavelength) # argent
@@ -513,65 +534,177 @@ for wavelength in list_wavelength:
     perm_Cr = epsCrbb(wavelength)
     materials = {"perm_env": perm_env, "perm_dielec": perm_dielec, "perm_Glass": perm_Glass, "perm_Ag": perm_Ag, "perm_Au": perm_Au, "perm_Cr": perm_Cr}
     wave = {"wavelength": wavelength, "angle": angle, "polarization": polarization}
-    R_mol0[idx] = reflectance(geometry_mol0, wave, materials, n_mod)
-    R_mol1[idx] = reflectance(geometry_mol1, wave, materials, n_mod)
-    R_mol2[idx] = reflectance(geometry_mol2, wave, materials, n_mod)
-    R_mol3[idx] = reflectance(geometry_mol3, wave, materials, n_mod)
-    R_mol4[idx] = reflectance(geometry_mol4, wave, materials, n_mod)
-    R_mol5[idx] = reflectance(geometry_mol5, wave, materials, n_mod)
+    R_gold0_mol[idx] = reflectance(geometry_gold0_mol, wave, materials, n_mod)
+    R_gold0_nomol[idx] = reflectance(geometry_gold0_nomol, wave, materials, n_mod)
+    R_gold10_mol[idx] = reflectance(geometry_gold10_mol, wave, materials, n_mod)
+    R_gold10_nomol[idx] = reflectance(geometry_gold10_nomol, wave, materials, n_mod)
+    R_gold20_mol[idx] = reflectance(geometry_gold20_mol, wave, materials, n_mod)
+    R_gold20_nomol[idx] = reflectance(geometry_gold20_nomol, wave, materials, n_mod)
+    R_gold30_mol[idx] = reflectance(geometry_gold30_mol, wave, materials, n_mod)
+    R_gold30_nomol[idx] = reflectance(geometry_gold30_nomol, wave, materials, n_mod)
+    R_gold40_mol[idx] = reflectance(geometry_gold40_mol, wave, materials, n_mod)
+    R_gold40_nomol[idx] = reflectance(geometry_gold40_nomol, wave, materials, n_mod)
+    R_gold50_mol[idx] = reflectance(geometry_gold50_mol, wave, materials, n_mod)
+    R_gold50_nomol[idx] = reflectance(geometry_gold50_nomol, wave, materials, n_mod)  
+    R_gold100_mol[idx] = reflectance(geometry_gold100_mol, wave, materials, n_mod)
+    R_gold100_nomol[idx] = reflectance(geometry_gold100_nomol, wave, materials, n_mod)
+    R_gold200_mol[idx] = reflectance(geometry_gold200_mol, wave, materials, n_mod)
+    R_gold200_nomol[idx] = reflectance(geometry_gold200_nomol, wave, materials, n_mod)          
     idx += 1
 
-plt.figure(2)
-plt.plot(list_wavelength, R_mol0, label = "No molecule")
-plt.plot(list_wavelength, R_mol1, label = "molecules 1 nm")
-plt.plot(list_wavelength, R_mol2, label = "molecules 2 nm")
-plt.plot(list_wavelength, R_mol3, label = "molecules 3 nm")
-plt.plot(list_wavelength, R_mol4, label = "molecules 4 nm")
-plt.plot(list_wavelength, R_mol5, label = "molecules 5 nm")
+plt.figure(0)
+plt.plot(list_wavelength, R_gold0_mol, "r", label = "0 nm")
+plt.plot(list_wavelength, R_gold0_nomol, "--r") #,  label = "1 nm")
+plt.plot(list_wavelength, R_gold10_mol, "b", label = "10 nm")
+plt.plot(list_wavelength, R_gold10_nomol,"--b") #,  label = "2 nm")
+plt.plot(list_wavelength, R_gold20_mol,"y", label = "20 nm")
+plt.plot(list_wavelength, R_gold20_nomol,"--y") #, label = "3 nm")
+plt.plot(list_wavelength, R_gold30_mol,"c", label = "30 nm")
+plt.plot(list_wavelength, R_gold30_nomol,"--c") #, label = "4 nm")
+plt.plot(list_wavelength, R_gold40_mol,"k", label = "40 nm")
+plt.plot(list_wavelength, R_gold40_nomol,"--k") #, label = "3 nm")
+plt.plot(list_wavelength, R_gold50_mol,"g", label = "50 nm")
+plt.plot(list_wavelength, R_gold50_nomol,"--g") #, label = "4 nm")
+plt.plot(list_wavelength, R_gold100_mol,"m", label = "100 nm")
+plt.plot(list_wavelength, R_gold100_nomol,"--m") #, label = "3 nm")
+#plt.plot(list_wavelength, R_gold200_mol,"0.7", label = "200 nm")
+#plt.plot(list_wavelength, R_gold200_nomol,"--0.7") #, label = "4 nm")
 plt.legend()
 plt.ylabel("Reflectance")
-plt.title("Molecules thickness") # reflectance (functionnalization thickness)
+plt.title("Gold thickness / with (lines) or without (dotted) molecules")
 plt.xlabel("Wavelength (nm)")
 
 plt.show(block=False)
-plt.savefig("spacer3/thickness_mol/reflectance_wav_mol_All_zoom.jpg")
+plt.savefig("spacer3/gold/allgold.pdf")
+plt.savefig("spacer3/gold/allgold.jpg")
 
-# ## Etude de la dépendance de la réflexion à la longueur d'onde, influence de la dimension du résonateur
+
+plt.figure(1)
+plt.plot(list_wavelength, R_gold0_mol, "r", label = " with molecules")
+plt.plot(list_wavelength, R_gold0_nomol, "--r", label = "without")
+plt.legend()
+plt.ylabel("Reflectance")
+plt.title("Gold 0 nm")
+plt.xlabel("Wavelength (nm)")
+
+plt.show(block=False)
+plt.savefig("spacer3/gold/gold0.pdf")
+plt.savefig("spacer3/gold/gold0.jpg")
+
+plt.figure(10)
+plt.plot(list_wavelength, R_gold10_mol, "b", label = " with molecules")
+plt.plot(list_wavelength, R_gold10_nomol, "--b", label = "without")
+plt.legend()
+plt.ylabel("Reflectance")
+plt.title("Gold 10 nm")
+plt.xlabel("Wavelength (nm)")
+
+plt.show(block=False)
+plt.savefig("spacer3/gold/gold10.pdf")
+plt.savefig("spacer3/gold/gold10.jpg")
+
+plt.figure(20)
+plt.plot(list_wavelength, R_gold20_mol, "y", label = " with molecules")
+plt.plot(list_wavelength, R_gold20_nomol, "--y", label = "without")
+plt.legend()
+plt.ylabel("Reflectance")
+plt.title("Gold 20 nm")
+plt.xlabel("Wavelength (nm)")
+
+plt.show(block=False)
+plt.savefig("spacer3/gold/gold20.pdf")
+plt.savefig("spacer3/gold/gold20.jpg")
+
+plt.figure(30)
+plt.plot(list_wavelength, R_gold30_mol, "c", label = " with molecules")
+plt.plot(list_wavelength, R_gold30_nomol, "--c", label = "without")
+plt.legend()
+plt.ylabel("Reflectance")
+plt.title("Gold 30 nm")
+plt.xlabel("Wavelength (nm)")
+
+plt.show(block=False)
+plt.savefig("spacer3/gold/gold30.pdf")
+plt.savefig("spacer3/gold/gold30.jpg")
+
+plt.figure(40)
+plt.plot(list_wavelength, R_gold40_mol, "k", label = " with molecules")
+plt.plot(list_wavelength, R_gold40_nomol, "--k", label = "without")
+plt.legend()
+plt.ylabel("Reflectance")
+plt.title("Gold 40 nm")
+plt.xlabel("Wavelength (nm)")
+
+plt.show(block=False)
+plt.savefig("spacer3/gold/gold40.pdf")
+plt.savefig("spacer3/gold/gold40.jpg")
+
+plt.figure(50)
+plt.plot(list_wavelength, R_gold50_mol, "g", label = " with molecules")
+plt.plot(list_wavelength, R_gold50_nomol, "--g", label = "without")
+plt.legend()
+plt.ylabel("Reflectance")
+plt.title("Gold 50 nm")
+plt.xlabel("Wavelength (nm)")
+
+plt.show(block=False)
+plt.savefig("spacer3/gold/gold50.pdf")
+plt.savefig("spacer3/gold/gold50.jpg")
+
+plt.figure(100)
+plt.plot(list_wavelength, R_gold100_mol, "m", label = " with molecules")
+plt.plot(list_wavelength, R_gold100_nomol, "--m", label = "without")
+plt.legend()
+plt.ylabel("Reflectance")
+plt.title("Gold 100 nm")
+plt.xlabel("Wavelength (nm)")
+
+plt.show(block=False)
+plt.savefig("spacer3/gold/gold100.pdf")
+plt.savefig("spacer3/gold/gold100.jpg")
+
+# ## Etude de la dépendance de la réflexion à la longueur d'onde, influence de la taille du cube
 # thick_reso30 = 30
 # thick_reso40 = 40
 # thick_reso50 = 50
 # thick_reso60 = 60
 # thick_reso70 = 70
+# thick_reso80 = 80
 
 # width_reso30 = 30
 # width_reso40 = 40
 # width_reso50 = 50
 # width_reso60 = 60
 # width_reso70 = 70
+# width_reso80 = 80
 
-# list_wavelength = np.linspace(750, 1100, 200)
-# R_reso30_func = np.empty(list_wavelength.size)
-# R_reso30_nofunc = np.empty(list_wavelength.size)
-# R_reso40_func = np.empty(list_wavelength.size)
-# R_reso40_nofunc = np.empty(list_wavelength.size)
-# R_reso50_func = np.empty(list_wavelength.size)
-# R_reso50_nofunc = np.empty(list_wavelength.size)
-# R_reso60_func = np.empty(list_wavelength.size)
-# R_reso60_nofunc = np.empty(list_wavelength.size)
-# R_reso70_func = np.empty(list_wavelength.size)
-# R_reso70_nofunc = np.empty(list_wavelength.size)
+# list_wavelength = np.linspace(450, 1500, 200)
+# R_reso30_mol = np.empty(list_wavelength.size)
+# R_reso30_nomol = np.empty(list_wavelength.size)
+# R_reso40_mol = np.empty(list_wavelength.size)
+# R_reso40_nomol = np.empty(list_wavelength.size)
+# R_reso50_mol = np.empty(list_wavelength.size)
+# R_reso50_nomol = np.empty(list_wavelength.size)
+# R_reso60_mol = np.empty(list_wavelength.size)
+# R_reso60_nomol = np.empty(list_wavelength.size)
+# R_reso70_mol = np.empty(list_wavelength.size)
+# R_reso70_nomol = np.empty(list_wavelength.size)
+# R_reso80_mol = np.empty(list_wavelength.size)
+# R_reso80_nomol = np.empty(list_wavelength.size)
 # idx = 0
 
-# geometry_reso30_func = {"thick_super": thick_super, "width_reso": width_reso30, "thick_reso": thick_reso30, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-# geometry_reso30_nofunc = {"thick_super": thick_super, "width_reso": width_reso30, "thick_reso": thick_reso30, "thick_gap": thick_gap, "thick_func": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-# geometry_reso40_func = {"thick_super": thick_super, "width_reso": width_reso40, "thick_reso": thick_reso40, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-# geometry_reso40_nofunc = {"thick_super": thick_super, "width_reso": width_reso40, "thick_reso": thick_reso40, "thick_gap": thick_gap, "thick_func": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-# geometry_reso50_func = {"thick_super": thick_super, "width_reso": width_reso50, "thick_reso": thick_reso50, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-# geometry_reso50_nofunc = {"thick_super": thick_super, "width_reso": width_reso50, "thick_reso": thick_reso50, "thick_gap": thick_gap, "thick_func": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-# geometry_reso60_func = {"thick_super": thick_super, "width_reso": width_reso60, "thick_reso": thick_reso60, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-# geometry_reso60_nofunc = {"thick_super": thick_super, "width_reso": width_reso60, "thick_reso": thick_reso60, "thick_gap": thick_gap, "thick_func": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-# geometry_reso70_func = {"thick_super": thick_super, "width_reso": width_reso70, "thick_reso": thick_reso70, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-# geometry_reso70_nofunc = {"thick_super": thick_super, "width_reso": width_reso70, "thick_reso": thick_reso70, "thick_gap": thick_gap, "thick_func": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_reso30_mol = {"thick_super": thick_super, "width_reso": width_reso30, "thick_reso": thick_reso30, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": thick_mol, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_reso30_nomol = {"thick_super": thick_super, "width_reso": width_reso30, "thick_reso": thick_reso30, "thick_gap": thick_gap,"thick_func": thick_func, "thick_mol": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_reso40_mol = {"thick_super": thick_super, "width_reso": width_reso40, "thick_reso": thick_reso40, "thick_gap": thick_gap,"thick_func": thick_func, "thick_mol": thick_mol, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_reso40_nomol = {"thick_super": thick_super, "width_reso": width_reso40, "thick_reso": thick_reso40, "thick_gap": thick_gap,"thick_func": thick_func, "thick_mol": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_reso50_mol = {"thick_super": thick_super, "width_reso": width_reso50, "thick_reso": thick_reso50, "thick_gap": thick_gap,"thick_func": thick_func, "thick_mol": thick_mol, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_reso50_nomol = {"thick_super": thick_super, "width_reso": width_reso50, "thick_reso": thick_reso50, "thick_gap": thick_gap,"thick_func": thick_func, "thick_mol": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_reso60_mol = {"thick_super": thick_super, "width_reso": width_reso60, "thick_reso": thick_reso60, "thick_gap": thick_gap,"thick_func": thick_func, "thick_mol": thick_mol, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_reso60_nomol = {"thick_super": thick_super, "width_reso": width_reso60, "thick_reso": thick_reso60, "thick_gap": thick_gap,"thick_func": thick_func, "thick_mol": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_reso70_mol = {"thick_super": thick_super, "width_reso": width_reso70, "thick_reso": thick_reso70, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": thick_mol, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_reso70_nomol = {"thick_super": thick_super, "width_reso": width_reso70, "thick_reso": thick_reso70, "thick_gap": thick_gap,"thick_func": thick_func, "thick_mol": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_reso80_mol = {"thick_super": thick_super, "width_reso": width_reso80, "thick_reso": thick_reso80, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": thick_mol, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_reso80_nomol = {"thick_super": thick_super, "width_reso": width_reso80, "thick_reso": thick_reso80, "thick_gap": thick_gap,"thick_func": thick_func, "thick_mol": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
 
 # for wavelength in list_wavelength:
 #     perm_Ag = epsAgbb(wavelength) # argent
@@ -579,122 +712,605 @@ plt.savefig("spacer3/thickness_mol/reflectance_wav_mol_All_zoom.jpg")
 #     perm_Cr = epsCrbb(wavelength)
 #     materials = {"perm_env": perm_env, "perm_dielec": perm_dielec, "perm_Glass": perm_Glass, "perm_Ag": perm_Ag, "perm_Au": perm_Au, "perm_Cr": perm_Cr}
 #     wave = {"wavelength": wavelength, "angle": angle, "polarization": polarization}
-#     R_reso30_func[idx] = reflectance(geometry_reso30_func, wave, materials, n_mod)
-#     R_reso30_nofunc[idx] = reflectance(geometry_reso30_nofunc, wave, materials, n_mod)
-#     R_reso40_func[idx] = reflectance(geometry_reso40_func, wave, materials, n_mod)
-#     R_reso40_nofunc[idx] = reflectance(geometry_reso40_nofunc, wave, materials, n_mod)
-#     R_reso50_func[idx] = reflectance(geometry_reso50_func, wave, materials, n_mod)
-#     R_reso50_nofunc[idx] = reflectance(geometry_reso50_nofunc, wave, materials, n_mod)
-#     R_reso60_func[idx] = reflectance(geometry_reso60_func, wave, materials, n_mod)
-#     R_reso60_nofunc[idx] = reflectance(geometry_reso60_nofunc, wave, materials, n_mod)
-#     R_reso70_func[idx] = reflectance(geometry_reso70_func, wave, materials, n_mod)
-#     R_reso70_nofunc[idx] = reflectance(geometry_reso70_nofunc, wave, materials, n_mod)
+#     R_reso30_mol[idx] = reflectance(geometry_reso30_mol, wave, materials, n_mod)
+#     R_reso30_nomol[idx] = reflectance(geometry_reso30_nomol, wave, materials, n_mod)
+#     R_reso40_mol[idx] = reflectance(geometry_reso40_mol, wave, materials, n_mod)
+#     R_reso40_nomol[idx] = reflectance(geometry_reso40_nomol, wave, materials, n_mod)
+#     R_reso50_mol[idx] = reflectance(geometry_reso50_mol, wave, materials, n_mod)
+#     R_reso50_nomol[idx] = reflectance(geometry_reso50_nomol, wave, materials, n_mod)
+#     R_reso60_mol[idx] = reflectance(geometry_reso60_mol, wave, materials, n_mod)
+#     R_reso60_nomol[idx] = reflectance(geometry_reso60_nomol, wave, materials, n_mod)
+#     R_reso70_mol[idx] = reflectance(geometry_reso70_mol, wave, materials, n_mod)
+#     R_reso70_nomol[idx] = reflectance(geometry_reso70_nomol, wave, materials, n_mod)
+#     R_reso80_mol[idx] = reflectance(geometry_reso80_mol, wave, materials, n_mod)
+#     R_reso80_nomol[idx] = reflectance(geometry_reso80_nomol, wave, materials, n_mod)    
+#     idx += 1
+
+# plt.figure(0)
+# plt.plot(list_wavelength, R_reso30_mol, "r", label = "30 nm")
+# plt.plot(list_wavelength, R_reso30_nomol, "--r") #,  label = "1 nm")
+# plt.plot(list_wavelength, R_reso40_mol, "b", label = "40 nm")
+# plt.plot(list_wavelength, R_reso40_nomol,"--b") #,  label = "2 nm")
+# plt.plot(list_wavelength, R_reso50_mol,"y", label = "50 nm")
+# plt.plot(list_wavelength, R_reso50_nomol,"--y") #, label = "3 nm")
+# plt.plot(list_wavelength, R_reso60_mol,"c", label = "60 nm")
+# plt.plot(list_wavelength, R_reso60_nomol,"--c") #, label = "4 nm")
+# plt.plot(list_wavelength, R_reso70_mol,"k", label = "70 nm")
+# plt.plot(list_wavelength, R_reso70_nomol,"--k") #, label = "3 nm")
+# plt.plot(list_wavelength, R_reso80_mol,"g", label = "80 nm")
+# plt.plot(list_wavelength, R_reso80_nomol,"--g") #, label = "4 nm")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Cube thickness / with (lines) or without (dotted) molecules")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("spacer3/cubes/period300/allreso.pdf")
+# plt.savefig("spacer3/cubes/period300/allreso.jpg")
+
+
+# plt.figure(1)
+# plt.plot(list_wavelength, R_reso30_mol, "r", label = " with molecules")
+# plt.plot(list_wavelength, R_reso30_nomol, "--r", label = "without")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Cube 30 nm")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("spacer3/cubes/period300/reso30.pdf")
+# plt.savefig("spacer3/cubes/period300/reso30.jpg")
+
+# plt.figure(4)
+# plt.plot(list_wavelength, R_reso40_mol, "b", label = " with molecules")
+# plt.plot(list_wavelength, R_reso40_nomol, "--b", label = "without")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Cube 40 nm")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("spacer3/cubes/period300/reso40.pdf")
+# plt.savefig("spacer3/cubes/period300/reso40.jpg")
+
+
+# plt.figure(5)
+# plt.plot(list_wavelength, R_reso50_mol, "y", label = " with molecules")
+# plt.plot(list_wavelength, R_reso50_nomol, "--y", label = "without")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Cube 50 nm")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("spacer3/cubes/period300/reso50.pdf")
+# plt.savefig("spacer3/cubes/period300/reso50.jpg")
+
+
+# plt.figure(6)
+# plt.plot(list_wavelength, R_reso60_mol, "c", label = " with molecules")
+# plt.plot(list_wavelength, R_reso60_nomol, "--c", label = "without")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Cube 60 nm")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("spacer3/cubes/period300/reso60.pdf")
+# plt.savefig("spacer3/cubes/period300/reso60.jpg")
+
+
+# plt.figure(7)
+# plt.plot(list_wavelength, R_reso70_mol, "k", label = " with molecules")
+# plt.plot(list_wavelength, R_reso70_nomol, "--k", label = "without")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Cube 70 nm")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("spacer3/cubes/period300/reso70.pdf")
+# plt.savefig("spacer3/cubes/period300/reso70.jpg")
+
+
+# plt.figure(8)
+# plt.plot(list_wavelength, R_reso80_mol, "g", label = " with molecules")
+# plt.plot(list_wavelength, R_reso80_nomol, "--g", label = "without")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Cube 80 nm")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("spacer3/cubes/period300/reso80.pdf")
+# plt.savefig("spacer3/cubes/period300/reso80.jpg")
+
+
+# ## Etude de la dépendance de la réflexion à la longueur d'onde, influence de l'épaisseur de chrome
+# thick_cr0 = 0
+# thick_cr1 = 1
+# thick_cr2 = 2
+# thick_cr3 = 3
+
+# list_wavelength = np.linspace(450, 1500, 200)
+# R_cr0_mol = np.empty(list_wavelength.size)
+# R_cr0_nomol = np.empty(list_wavelength.size)
+# R_cr1_mol = np.empty(list_wavelength.size)
+# R_cr1_nomol = np.empty(list_wavelength.size)
+# R_cr2_mol = np.empty(list_wavelength.size)
+# R_cr2_nomol = np.empty(list_wavelength.size)
+# R_cr3_mol = np.empty(list_wavelength.size)
+# R_cr3_nomol = np.empty(list_wavelength.size)
+# idx = 0
+
+# geometry_cr0_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": thick_mol, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr0, "period": period}
+# geometry_cr0_nomol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap,"thick_func": thick_func, "thick_mol": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr0, "period": period}
+# geometry_cr1_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap,"thick_func": thick_func, "thick_mol": thick_mol, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr1, "period": period}
+# geometry_cr1_nomol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap,"thick_func": thick_func, "thick_mol": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr1, "period": period}
+# geometry_cr2_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap,"thick_func": thick_func, "thick_mol": thick_mol, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr2, "period": period}
+# geometry_cr2_nomol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap,"thick_func": thick_func, "thick_mol": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr2, "period": period}
+# geometry_cr3_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap,"thick_func": thick_func, "thick_mol": thick_mol, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr3, "period": period}
+# geometry_cr3_nomol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap,"thick_func": thick_func, "thick_mol": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr3, "period": period}
+
+# for wavelength in list_wavelength:
+#     perm_Ag = epsAgbb(wavelength) # argent
+#     perm_Au = epsAubb(wavelength)
+#     perm_Cr = epsCrbb(wavelength)
+#     materials = {"perm_env": perm_env, "perm_dielec": perm_dielec, "perm_Glass": perm_Glass, "perm_Ag": perm_Ag, "perm_Au": perm_Au, "perm_Cr": perm_Cr}
+#     wave = {"wavelength": wavelength, "angle": angle, "polarization": polarization}
+#     R_cr0_mol[idx] = reflectance(geometry_cr0_mol, wave, materials, n_mod)
+#     R_cr0_nomol[idx] = reflectance(geometry_cr0_nomol, wave, materials, n_mod)
+#     R_cr1_mol[idx] = reflectance(geometry_cr1_mol, wave, materials, n_mod)
+#     R_cr1_nomol[idx] = reflectance(geometry_cr1_nomol, wave, materials, n_mod)
+#     R_cr2_mol[idx] = reflectance(geometry_cr2_mol, wave, materials, n_mod)
+#     R_cr2_nomol[idx] = reflectance(geometry_cr2_nomol, wave, materials, n_mod)
+#     R_cr3_mol[idx] = reflectance(geometry_cr3_mol, wave, materials, n_mod)
+#     R_cr3_nomol[idx] = reflectance(geometry_cr3_nomol, wave, materials, n_mod)
+#     idx += 1
+
+# plt.figure(0)
+# plt.plot(list_wavelength, R_cr0_mol, "r", label = "0 nm")
+# plt.plot(list_wavelength, R_cr0_nomol, "--r") #,  label = "1 nm")
+# plt.plot(list_wavelength, R_cr1_mol, "b", label = "1 nm")
+# plt.plot(list_wavelength, R_cr1_nomol,"--b") #,  label = "2 nm")
+# plt.plot(list_wavelength, R_cr2_mol,"y", label = "2 nm")
+# plt.plot(list_wavelength, R_cr2_nomol,"--y") #, label = "3 nm")
+# plt.plot(list_wavelength, R_cr3_mol,"c", label = "3 nm")
+# plt.plot(list_wavelength, R_cr3_nomol,"--c") #, label = "4 nm")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Chrome thickness / with (lines) or without (crosses) molecules")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("spacer3/chrome/allcr.pdf")
+# plt.savefig("spacer3/chrome/allcr.jpg")
+
+
+# plt.figure(1)
+# plt.plot(list_wavelength, R_cr0_mol, "r", label = " with molecules")
+# plt.plot(list_wavelength, R_cr0_nomol, "--r", label = "without")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Chrome 0 nm")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("spacer3/chrome/cr0.pdf")
+# plt.savefig("spacer3/chrome/cr0.jpg")
+
+
+# plt.figure(2)
+# plt.plot(list_wavelength, R_cr1_mol, "b", label = " with molecules")
+# plt.plot(list_wavelength, R_cr1_nomol, "--b", label = "without")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Chrome 1 nm")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("spacer3/chrome/cr1.pdf")
+# plt.savefig("spacer3/chrome/cr1.jpg")
+
+
+# plt.figure(3)
+# plt.plot(list_wavelength, R_cr2_mol, "y", label = " with molecules")
+# plt.plot(list_wavelength, R_cr2_nomol, "--y", label = "without")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Chrome 2 nm")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("spacer3/chrome/cr2.pdf")
+# plt.savefig("spacer3/chrome/cr2.jpg")
+
+
+# plt.figure(4)
+# plt.plot(list_wavelength, R_cr3_mol, "c", label = " with molecules")
+# plt.plot(list_wavelength, R_cr3_nomol, "--c", label = "without")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Chrome 3 nm")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("spacer3/chrome/cr3.pdf")
+# plt.savefig("spacer3/chrome/cr3.jpg")
+
+# ## Etude de la dépendance de la réflexion à la longueur d'onde, influence de la taille du gap
+# thick_gap1 = 1
+# thick_gap2 = 2
+# thick_gap3 = 3
+# thick_gap4 = 4
+# thick_gap5 = 5
+# thick_gap10 = 10
+
+# list_wavelength = np.linspace(450, 2000, 200)
+# R_gap1_mol = np.empty(list_wavelength.size)
+# R_gap1_nomol = np.empty(list_wavelength.size)
+# R_gap2_mol = np.empty(list_wavelength.size)
+# R_gap2_nomol = np.empty(list_wavelength.size)
+# R_gap3_mol = np.empty(list_wavelength.size)
+# R_gap3_nomol = np.empty(list_wavelength.size)
+# R_gap4_mol = np.empty(list_wavelength.size)
+# R_gap4_nomol = np.empty(list_wavelength.size)
+# R_gap5_mol = np.empty(list_wavelength.size)
+# R_gap5_nomol = np.empty(list_wavelength.size)
+# R_gap10_mol = np.empty(list_wavelength.size)
+# R_gap10_nomol = np.empty(list_wavelength.size)
+# idx = 0
+
+# geometry_gap1_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap1, "thick_func": thick_func, "thick_mol": thick_mol, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gap1_nomol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap1,"thick_func": thick_func, "thick_mol": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gap2_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap2,"thick_func": thick_func, "thick_mol": thick_mol, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gap2_nomol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap2,"thick_func": thick_func, "thick_mol": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gap3_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap3,"thick_func": thick_func, "thick_mol": thick_mol, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gap3_nomol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap3,"thick_func": thick_func, "thick_mol": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gap4_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap4,"thick_func": thick_func, "thick_mol": thick_mol, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gap4_nomol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap4,"thick_func": thick_func, "thick_mol": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gap5_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap5,"thick_func": thick_func, "thick_mol": thick_mol, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gap5_nomol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap5,"thick_func": thick_func, "thick_mol": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gap10_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap10,"thick_func": thick_func, "thick_mol": thick_mol, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gap10_nomol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap10,"thick_func": thick_func, "thick_mol": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+
+# for wavelength in list_wavelength:
+#     perm_Ag = epsAgbb(wavelength) # argent
+#     perm_Au = epsAubb(wavelength)
+#     perm_Cr = epsCrbb(wavelength)
+#     materials = {"perm_env": perm_env, "perm_dielec": perm_dielec, "perm_Glass": perm_Glass, "perm_Ag": perm_Ag, "perm_Au": perm_Au, "perm_Cr": perm_Cr}
+#     wave = {"wavelength": wavelength, "angle": angle, "polarization": polarization}
+#     R_gap1_mol[idx] = reflectance(geometry_gap1_mol, wave, materials, n_mod)
+#     R_gap1_nomol[idx] = reflectance(geometry_gap1_nomol, wave, materials, n_mod)
+#     R_gap2_mol[idx] = reflectance(geometry_gap2_mol, wave, materials, n_mod)
+#     R_gap2_nomol[idx] = reflectance(geometry_gap2_nomol, wave, materials, n_mod)
+#     R_gap3_mol[idx] = reflectance(geometry_gap3_mol, wave, materials, n_mod)
+#     R_gap3_nomol[idx] = reflectance(geometry_gap3_nomol, wave, materials, n_mod)
+#     R_gap4_mol[idx] = reflectance(geometry_gap4_mol, wave, materials, n_mod)
+#     R_gap4_nomol[idx] = reflectance(geometry_gap4_nomol, wave, materials, n_mod)
+#     R_gap5_mol[idx] = reflectance(geometry_gap5_mol, wave, materials, n_mod)
+#     R_gap5_nomol[idx] = reflectance(geometry_gap5_nomol, wave, materials, n_mod)
+#     R_gap10_mol[idx] = reflectance(geometry_gap10_mol, wave, materials, n_mod)
+#     R_gap10_nomol[idx] = reflectance(geometry_gap10_nomol, wave, materials, n_mod)
+#     idx += 1
+
+# plt.figure(0)
+# plt.plot(list_wavelength, R_gap1_mol, "r", label = "1 nm")
+# plt.plot(list_wavelength, R_gap1_nomol, "--r") #,  label = "1 nm")
+# plt.plot(list_wavelength, R_gap2_mol, "b", label = "2 nm")
+# plt.plot(list_wavelength, R_gap2_nomol,"--b") #,  label = "2 nm")
+# plt.plot(list_wavelength, R_gap3_mol,"y", label = "3 nm")
+# plt.plot(list_wavelength, R_gap3_nomol,"--y") #, label = "3 nm")
+# plt.plot(list_wavelength, R_gap4_mol,"c", label = "4 nm")
+# plt.plot(list_wavelength, R_gap4_nomol,"--c") #, label = "4 nm")
+# plt.plot(list_wavelength, R_gap5_mol,"k", label = "5 nm")
+# plt.plot(list_wavelength, R_gap5_nomol,"--k") #, label = "5 nm")
+# plt.plot(list_wavelength, R_gap10_mol, "g", label = "10 nm")
+# plt.plot(list_wavelength, R_gap10_nomol,"--g") #, label = "10 nm")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Gap sizes with (lines) or without (crosses) molecules")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("spacer3/gap/large/allgap.pdf")
+# plt.savefig("spacer3/gap/large/allgap.jpg")
+
+
+# plt.figure(1)
+# plt.plot(list_wavelength, R_gap1_mol, "r", label = " with molecules")
+# plt.plot(list_wavelength, R_gap1_nomol, "--r", label = "without")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Gap 1 nm")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("spacer3/gap/large/gap1.pdf")
+# plt.savefig("spacer3/gap/large/gap1.jpg")
+
+
+# plt.figure(2)
+# plt.plot(list_wavelength, R_gap2_mol,"b", label = " with molecules")
+# plt.plot(list_wavelength, R_gap2_nomol,"--b", label = "without")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Gap 2 nm")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("spacer3/gap/large/gap2.pdf")
+# plt.savefig("spacer3/gap/large/gap2.jpg")
+
+# plt.figure(3)
+# plt.plot(list_wavelength, R_gap3_mol,"y", label = " with molecules")
+# plt.plot(list_wavelength, R_gap3_nomol,"--y", label = "without")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Gap 3 nm")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("spacer3/gap/large/gap3.pdf")
+# plt.savefig("spacer3/gap/large/gap3.jpg")
+
+
+# plt.figure(4)
+# plt.plot(list_wavelength, R_gap4_mol,"c", label = " with molecules")
+# plt.plot(list_wavelength, R_gap4_nomol,"--c", label = "without")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Gap 4 nm")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("spacer3/gap/large/gap4.pdf")
+# plt.savefig("spacer3/gap/large/gap4.jpg")
+
+# plt.figure(5)
+# plt.plot(list_wavelength, R_gap5_mol,"k", label = " with molecules")
+# plt.plot(list_wavelength, R_gap5_nomol,"--k", label = "without")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Gap 5 nm")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("spacer3/gap/large/gap5.pdf")
+# plt.savefig("spacer3/gap/large/gap5.jpg")
+
+
+# plt.figure(10)
+# plt.plot(list_wavelength, R_gap10_mol, "g", label = " with molecules")
+# plt.plot(list_wavelength, R_gap10_nomol,"--g", label = "without")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Gap 10 nm")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("spacer3/gap/large/gap10.pdf")
+# plt.savefig("spacer3/gap/large/gap10.jpg")
+
+
+## Etude de la dépendance de la réflexion à la longueur d'onde, influence de la période
+# period300 = 300.01
+# period400 = 400.01
+# period500 = 500.01
+# period600 = 600.01
+# period700 = 700.01
+
+
+# list_wavelength = np.linspace(500, 1600, 200)
+# R_period300 = np.empty(list_wavelength.size)
+# R_period400 = np.empty(list_wavelength.size)
+# R_period500 = np.empty(list_wavelength.size)
+# R_period600 = np.empty(list_wavelength.size)
+# R_period700 = np.empty(list_wavelength.size)
+
+# idx = 0
+
+# geometry_period300 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": thick_mol, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period300}
+# geometry_period400 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func,"thick_mol": thick_mol, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period400}
+# geometry_period500 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func,"thick_mol": thick_mol, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period500}
+# geometry_period600 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": thick_mol,"thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period600}
+# geometry_period700 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": thick_mol,"thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period700}
+
+# for wavelength in list_wavelength:
+#     perm_Ag = epsAgbb(wavelength) # argent
+#     perm_Au = epsAubb(wavelength)
+#     perm_Cr = epsCrbb(wavelength)
+#     materials = {"perm_env": perm_env, "perm_dielec": perm_dielec, "perm_Glass": perm_Glass, "perm_Ag": perm_Ag, "perm_Au": perm_Au, "perm_Cr": perm_Cr}
+#     wave = {"wavelength": wavelength, "angle": angle, "polarization": polarization}
+#     R_period300[idx] = reflectance(geometry_period300, wave, materials, n_mod)
+#     R_period400[idx] = reflectance(geometry_period400, wave, materials, n_mod)
+#     R_period500[idx] = reflectance(geometry_period500, wave, materials, n_mod)
+#     R_period600[idx] = reflectance(geometry_period600, wave, materials, n_mod)
+#     R_period700[idx] = reflectance(geometry_period700, wave, materials, n_mod)
 #     idx += 1
 
 # plt.figure(1)
-# plt.plot(list_wavelength, R_reso30_func, label = "Reso 30, with func")
-# plt.plot(list_wavelength, R_reso30_nofunc, label = "Reso 30 without func")
-# plt.plot(list_wavelength, R_reso40_func, label = "Reso 40, with func")
-# plt.plot(list_wavelength, R_reso40_nofunc, label = "Reso 40 without func")
-# plt.plot(list_wavelength, R_reso50_func, label = "Reso 50, with func")
-# plt.plot(list_wavelength, R_reso50_nofunc, label = "Reso 50 without func")
-# plt.plot(list_wavelength, R_reso60_func, label = "Reso 60, with func")
-# plt.plot(list_wavelength, R_reso60_nofunc, label = "Reso 60 without func")
-# plt.plot(list_wavelength, R_reso70_func, label = "Reso 70, with func")
-# plt.plot(list_wavelength, R_reso70_nofunc, label = "Reso 70 without func")
+# plt.plot(list_wavelength, R_period300, "r", label = "period 300 nm")
+# plt.plot(list_wavelength, R_period400, "b", label = "period 400 nm")
+# plt.plot(list_wavelength, R_period500,"g", label = "period 500 nm")
+# plt.plot(list_wavelength, R_period600,"c", label = "period 600 nm")
+# plt.plot(list_wavelength, R_period700,"k", label = "period 700 nm")
 # plt.legend()
 # plt.ylabel("Reflectance")
-# plt.title("Dependance of dimension resonator")
+# plt.title("Reflectance (period sensibility)")
 # plt.xlabel("Wavelength (nm)")
 
 # plt.show(block=False)
-# plt.savefig("width_resonator_dep/reflectance_wav_func_nofunc_widthResoAll.jpg")
+# plt.savefig("spacer3/period/period.jpg")
+# plt.savefig("spacer3/period/period.pdf")
 
-# plt.figure(30)
-# plt.plot(list_wavelength, R_reso30_func, label = "Reso 30, with func")
-# plt.plot(list_wavelength, R_reso30_nofunc, label = "Reso 30 without func")
+
+# # # Etude de la dépendance de tous les coefficients 
+# perm_air = 1.0 ** 2
+# perm_eau = 1.33 ** 2
+
+# list_wavelength = np.linspace(450, 2000, 200)
+# Rdown_air = np.empty(list_wavelength.size)
+# Rup_air = np.empty(list_wavelength.size)
+# Tdown_air = np.empty(list_wavelength.size)
+# Tup_air = np.empty(list_wavelength.size)
+# Rdown_eau = np.empty(list_wavelength.size)
+# Rup_eau = np.empty(list_wavelength.size)
+# Tdown_eau = np.empty(list_wavelength.size)
+# Tup_eau = np.empty(list_wavelength.size)
+
+# idx = 0
+
+# geometry = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func,"thick_mol": thick_mol, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+
+# for wavelength in list_wavelength:
+#     perm_Ag = epsAgbb(wavelength) # argent
+#     perm_Au = epsAubb(wavelength)
+#     perm_Cr = epsCrbb(wavelength)
+#     materials_air = {"perm_env": perm_air, "perm_dielec": perm_dielec, "perm_Glass": perm_Glass, "perm_Ag": perm_Ag, "perm_Au": perm_Au, "perm_Cr": perm_Cr}
+#     materials_eau = {"perm_env": perm_eau, "perm_dielec": perm_dielec, "perm_Glass": perm_Glass, "perm_Ag": perm_Ag, "perm_Au": perm_Au, "perm_Cr": perm_Cr}
+#     wave = {"wavelength": wavelength, "angle": angle, "polarization": polarization}
+#     Rdown_air[idx], Rup_air[idx], Tdown_air[idx], Tup_air[idx] = reflectance(geometry, wave, materials_air, n_mod)
+#     Rdown_eau[idx], Rup_eau[idx], Tdown_eau[idx], Tup_eau[idx] = reflectance(geometry, wave, materials_eau, n_mod)
+#     idx += 1
+
+# plt.figure(1)
+# plt.plot(list_wavelength, Rdown_air, "b", label = "Rd A")
+# plt.plot(list_wavelength, Rup_air, "r", label = "Ru A")
+# plt.plot(list_wavelength, Tdown_air, "k", label = "Td A")
+# plt.plot(list_wavelength, Tup_air, "g", label = "Tu A")
+# plt.plot(list_wavelength, Rdown_eau, "--b", label = "Rd W")
+# plt.plot(list_wavelength, Rup_eau, "--r", label = "Ru W")
+# plt.plot(list_wavelength, Tdown_eau, "--k", label = "Td W")
+# plt.plot(list_wavelength, Tup_eau, "--g", label = "Tu W")
 # plt.legend()
 # plt.ylabel("Reflectance")
-# plt.title("Dependance of width resonator")
+# plt.title("Reflectance (environment sensibility)") # reflectance (functionnalization thickness)
 # plt.xlabel("Wavelength (nm)")
 
 # plt.show(block=False)
-# plt.savefig("width_resonator_dep/reflectance_wav_func_nofunc_widthReso30.jpg")
+# plt.savefig("spacer3/allcoeffsAW.jpg")
+# plt.savefig("spacer3/allcoeffsAW.pdf")
 
-# plt.figure(40)
-# plt.plot(list_wavelength, R_reso40_func, label = "Reso 40, with func")
-# plt.plot(list_wavelength, R_reso40_nofunc, label = "Reso 40 without func")
+# plt.figure(2)
+# plt.plot(list_wavelength, Rdown_air, "b", label = "Rd A")
+# #plt.plot(list_wavelength, Rup_air, "r", label = "Ru A")
+# #plt.plot(list_wavelength, Tdown_air, "k", label = "Td A")
+# #plt.plot(list_wavelength, Tup_air, "g", label = "Tu A")
+# plt.plot(list_wavelength, Rdown_eau, "--b", label = "Rd W")
+# #plt.plot(list_wavelength, Rup_eau, "--r", label = "Ru W")
+# #plt.plot(list_wavelength, Tdown_eau, "--k", label = "Td W")
+# #plt.plot(list_wavelength, Tup_eau, "--g", label = "Tu W")
 # plt.legend()
 # plt.ylabel("Reflectance")
-# plt.title("Dependance of width resonator")
+# plt.title("Reflectance (environment sensibility)") # reflectance (functionnalization thickness)
 # plt.xlabel("Wavelength (nm)")
 
 # plt.show(block=False)
-# plt.savefig("width_resonator_dep/reflectance_wav_func_nofunc_widthReso40.jpg")
+# plt.savefig("spacer3/RdcoeffsAW.jpg")
+# plt.savefig("spacer3/RdcoeffsAW.pdf")
 
-# plt.figure(50)
-# plt.plot(list_wavelength, R_reso50_func, label = "Reso 50, with func")
-# plt.plot(list_wavelength, R_reso50_nofunc, label = "Reso 50 without func")
+
+# ## Etude de la dépendance de la réflexion à la longueur d'onde, influence de l'épaisseur de moélcules
+# thick_mol0 = 0
+# thick_mol1 = 1
+# thick_mol2 = 2
+# thick_mol3 = 3
+# thick_mol4 = 4
+# thick_mol5 = 5
+
+# list_wavelength = np.linspace(1100, 1400, 200)
+# R_mol0 = np.empty(list_wavelength.size)
+# R_mol1 = np.empty(list_wavelength.size)
+# R_mol2 = np.empty(list_wavelength.size)
+# R_mol3 = np.empty(list_wavelength.size)
+# R_mol4 = np.empty(list_wavelength.size)
+# R_mol5 = np.empty(list_wavelength.size)
+# idx = 0
+
+# geometry_mol0 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": thick_mol0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_mol1 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap,"thick_func": thick_func, "thick_mol": thick_mol1, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_mol2 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap,"thick_func": thick_func, "thick_mol": thick_mol2, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_mol3 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap,"thick_func": thick_func, "thick_mol": thick_mol3, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_mol4 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap,"thick_func": thick_func, "thick_mol": thick_mol4, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_mol5 = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap,"thick_func": thick_func, "thick_mol": thick_mol5, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+
+# for wavelength in list_wavelength:
+#     perm_Ag = epsAgbb(wavelength) # argent
+#     perm_Au = epsAubb(wavelength)
+#     perm_Cr = epsCrbb(wavelength)
+#     materials = {"perm_env": perm_env, "perm_dielec": perm_dielec, "perm_Glass": perm_Glass, "perm_Ag": perm_Ag, "perm_Au": perm_Au, "perm_Cr": perm_Cr}
+#     wave = {"wavelength": wavelength, "angle": angle, "polarization": polarization}
+#     R_mol0[idx] = reflectance(geometry_mol0, wave, materials, n_mod)
+#     R_mol1[idx] = reflectance(geometry_mol1, wave, materials, n_mod)
+#     R_mol2[idx] = reflectance(geometry_mol2, wave, materials, n_mod)
+#     R_mol3[idx] = reflectance(geometry_mol3, wave, materials, n_mod)
+#     R_mol4[idx] = reflectance(geometry_mol4, wave, materials, n_mod)
+#     R_mol5[idx] = reflectance(geometry_mol5, wave, materials, n_mod)        
+#     idx += 1
+
+# plt.figure(0)
+# plt.plot(list_wavelength, R_mol0, "r", label = "0 nm")
+# plt.plot(list_wavelength, R_mol1, "b", label = "1 nm")
+# plt.plot(list_wavelength, R_mol2,"y", label = "2 nm")
+# plt.plot(list_wavelength, R_mol3,"c", label = "3 nm")
+# plt.plot(list_wavelength, R_mol4,"k", label = "4 nm")
+# plt.plot(list_wavelength, R_mol5,"g", label = "5 nm")
 # plt.legend()
 # plt.ylabel("Reflectance")
-# plt.title("Dependance of width resonator")
+# plt.title("Molecules thickness")
 # plt.xlabel("Wavelength (nm)")
 
 # plt.show(block=False)
-# plt.savefig("width_resonator_dep/reflectance_wav_func_nofunc_widthReso50.jpg")
-
-# plt.figure(60)
-# plt.plot(list_wavelength, R_reso60_func, label = "Reso 60, with func")
-# plt.plot(list_wavelength, R_reso60_nofunc, label = "Reso 60 without func")
-# plt.legend()
-# plt.ylabel("Reflectance")
-# plt.title("Dependance of width resonator")
-# plt.xlabel("Wavelength (nm)")
-
-# plt.show(block=False)
-# plt.savefig("width_resonator_dep/reflectance_wav_func_nofunc_widthReso60.jpg")
-
-# plt.figure(70)
-# plt.plot(list_wavelength, R_reso70_func, label = "Reso 70, with func")
-# plt.plot(list_wavelength, R_reso70_nofunc, label = "Reso 70 without func")
-# plt.legend()
-# plt.ylabel("Reflectance")
-# plt.title("Dependance of width resonator")
-# plt.xlabel("Wavelength (nm)")
-
-# plt.show(block=False)
-# plt.savefig("width_resonator_dep/reflectance_wav_func_nofunc_widthReso70.jpg")
+# plt.savefig("spacer3/mol/allmol.pdf")
+# plt.savefig("spacer3/mol/allmol.jpg")
 
 # ## Etude de la dépendance de la réflexion à la longueur d'onde, influence de la couche d'or
-# thick_gold5 = 5
+# thick_gold0 = 0
 # thick_gold10 = 10
-# thick_gold15 = 15
 # thick_gold20 = 20
-# thick_gold25 = 25
+# thick_gold30 = 30
+# thick_gold40 = 40
+# thick_gold50 = 50
+# thick_gold100 = 100
+# thick_gold200 = 200
 
-# list_wavelength = np.linspace(750, 1100, 200)
-# R_gold5_func = np.empty(list_wavelength.size)
-# R_gold5_nofunc = np.empty(list_wavelength.size)
-# R_gold10_func = np.empty(list_wavelength.size)
-# R_gold10_nofunc = np.empty(list_wavelength.size)
-# R_gold15_func = np.empty(list_wavelength.size)
-# R_gold15_nofunc = np.empty(list_wavelength.size)
-# R_gold20_func = np.empty(list_wavelength.size)
-# R_gold20_nofunc = np.empty(list_wavelength.size)
-# R_gold25_func = np.empty(list_wavelength.size)
-# R_gold25_nofunc = np.empty(list_wavelength.size)
+# list_wavelength = np.linspace(750, 1600, 200)
+# R_gold0_mol = np.empty(list_wavelength.size)
+# R_gold0_nomol = np.empty(list_wavelength.size)
+# R_gold10_mol = np.empty(list_wavelength.size)
+# R_gold10_nomol = np.empty(list_wavelength.size)
+# R_gold20_mol = np.empty(list_wavelength.size)
+# R_gold20_nomol = np.empty(list_wavelength.size)
+# R_gold30_mol = np.empty(list_wavelength.size)
+# R_gold30_nomol = np.empty(list_wavelength.size)
+# R_gold40_mol = np.empty(list_wavelength.size)
+# R_gold40_nomol = np.empty(list_wavelength.size)
+# R_gold50_mol = np.empty(list_wavelength.size)
+# R_gold50_nomol = np.empty(list_wavelength.size)
+# R_gold100_mol = np.empty(list_wavelength.size)
+# R_gold100_nomol = np.empty(list_wavelength.size)
+# R_gold200_mol = np.empty(list_wavelength.size)
+# R_gold200_nomol = np.empty(list_wavelength.size)
+
 # idx = 0
 
-# geometry_gold5_func = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold5, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-# geometry_gold5_nofunc = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": 0, "thick_gold": thick_gold5, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-# geometry_gold10_func = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold10, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-# geometry_gold10_nofunc = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": 0, "thick_gold": thick_gold10, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-# geometry_gold15_func = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold15, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-# geometry_gold15_nofunc = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": 0, "thick_gold": thick_gold15, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-# geometry_gold20_func = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold20, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-# geometry_gold20_nofunc = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": 0, "thick_gold": thick_gold20, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-# geometry_gold25_func = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_gold": thick_gold25, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-# geometry_gold25_nofunc = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": 0, "thick_gold": thick_gold25, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gold0_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": thick_mol, "thick_gold": thick_gold0, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gold0_nomol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": 0, "thick_gold": thick_gold0, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gold10_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func,"thick_mol": thick_mol, "thick_gold": thick_gold10, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gold10_nomol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func,"thick_mol": 0, "thick_gold": thick_gold10, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gold20_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func,"thick_mol": thick_mol, "thick_gold": thick_gold20, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gold20_nomol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": 0,"thick_gold": thick_gold20, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gold30_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": thick_mol,"thick_gold": thick_gold30, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gold30_nomol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": 0,"thick_gold": thick_gold30, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gold40_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": thick_mol,"thick_gold": thick_gold40, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gold40_nomol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": 0,"thick_gold": thick_gold40, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gold50_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": thick_mol,"thick_gold": thick_gold50, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gold50_nomol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": 0,"thick_gold": thick_gold50, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gold100_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": thick_mol,"thick_gold": thick_gold100, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gold100_nomol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": 0,"thick_gold": thick_gold100, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gold200_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": thick_mol,"thick_gold": thick_gold200, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# geometry_gold200_nomol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": 0,"thick_gold": thick_gold200, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
 
 # for wavelength in list_wavelength:
 #     perm_Ag = epsAgbb(wavelength) # argent
@@ -702,36 +1318,78 @@ plt.savefig("spacer3/thickness_mol/reflectance_wav_mol_All_zoom.jpg")
 #     perm_Cr = epsCrbb(wavelength)
 #     materials = {"perm_env": perm_env, "perm_dielec": perm_dielec, "perm_Glass": perm_Glass, "perm_Ag": perm_Ag, "perm_Au": perm_Au, "perm_Cr": perm_Cr}
 #     wave = {"wavelength": wavelength, "angle": angle, "polarization": polarization}
-#     R_gold5_func[idx] = reflectance(geometry_gold5_func, wave, materials, n_mod)
-#     R_gold5_nofunc[idx] = reflectance(geometry_gold5_nofunc, wave, materials, n_mod)
-#     R_gold10_func[idx] = reflectance(geometry_gold10_func, wave, materials, n_mod)
-#     R_gold10_nofunc[idx] = reflectance(geometry_gold10_nofunc, wave, materials, n_mod)
-#     R_gold15_func[idx] = reflectance(geometry_gold15_func, wave, materials, n_mod)
-#     R_gold15_nofunc[idx] = reflectance(geometry_gold15_nofunc, wave, materials, n_mod)
-#     R_gold20_func[idx] = reflectance(geometry_gold20_func, wave, materials, n_mod)
-#     R_gold20_nofunc[idx] = reflectance(geometry_gold20_nofunc, wave, materials, n_mod)
-#     R_gold25_func[idx] = reflectance(geometry_gold25_func, wave, materials, n_mod)
-#     R_gold25_nofunc[idx] = reflectance(geometry_gold25_nofunc, wave, materials, n_mod)
+#     R_gold0_mol[idx] = reflectance(geometry_gold0_mol, wave, materials, n_mod)
+#     R_gold0_nomol[idx] = reflectance(geometry_gold0_nomol, wave, materials, n_mod)
+#     R_gold10_mol[idx] = reflectance(geometry_gold10_mol, wave, materials, n_mod)
+#     R_gold10_nomol[idx] = reflectance(geometry_gold10_nomol, wave, materials, n_mod)
+#     R_gold30_mol[idx] = reflectance(geometry_gold30_mol, wave, materials, n_mod)
+#     R_gold30_nomol[idx] = reflectance(geometry_gold30_nomol, wave, materials, n_mod)
+#     R_gold20_mol[idx] = reflectance(geometry_gold20_mol, wave, materials, n_mod)
+#     R_gold20_nomol[idx] = reflectance(geometry_gold20_nomol, wave, materials, n_mod)
+#     R_gold40_mol[idx] = reflectance(geometry_gold40_mol, wave, materials, n_mod)
+#     R_gold40_nomol[idx] = reflectance(geometry_gold40_nomol, wave, materials, n_mod)
+#     R_gold50_mol[idx] = reflectance(geometry_gold50_mol, wave, materials, n_mod)
+#     R_gold50_nomol[idx] = reflectance(geometry_gold50_nomol, wave, materials, n_mod)
+#     R_gold100_mol[idx] = reflectance(geometry_gold100_mol, wave, materials, n_mod)
+#     R_gold100_nomol[idx] = reflectance(geometry_gold100_nomol, wave, materials, n_mod)
+#     R_gold200_mol[idx] = reflectance(geometry_gold200_mol, wave, materials, n_mod)
+#     R_gold200_nomol[idx] = reflectance(geometry_gold200_nomol, wave, materials, n_mod)
 #     idx += 1
 
-# plt.figure(1)
-# plt.plot(list_wavelength, R_gold5_func, label = "Au 5, with func")
-# plt.plot(list_wavelength, R_gold5_nofunc, label = "Au 5 without func")
-# plt.plot(list_wavelength, R_gold10_func, label = "Au 10, with func")
-# plt.plot(list_wavelength, R_gold10_nofunc, label = "Au 10 without func")
-# plt.plot(list_wavelength, R_gold15_func, label = "Au 15, with func")
-# plt.plot(list_wavelength, R_gold15_nofunc, label = "Au 15 without func")
-# plt.plot(list_wavelength, R_gold20_func, label = "Au 20, with func")
-# plt.plot(list_wavelength, R_gold20_nofunc, label = "Au 20 without func")
-# plt.plot(list_wavelength, R_gold25_func, label = "Au 25, with func")
-# plt.plot(list_wavelength, R_gold25_nofunc, label = "Au 25 without func")
+# # plt.figure(1)
+# # #plt.plot(list_wavelength, R_gold0_mol, "r", label = "Au 0")
+# # #plt.plot(list_wavelength, R_gold0_nomol, label = "0 nm")
+# # #plt.plot(list_wavelength, R_gold10_mol, "b", label = "Au 10")
+# # #plt.plot(list_wavelength, R_gold10_nomol, label = "10 nm")
+# # plt.plot(list_wavelength, R_gold20_mol, "r", label = "Au 20")
+# # plt.plot(list_wavelength, R_gold20_nomol, "xr")#, label = "20 nm")
+# # plt.plot(list_wavelength, R_gold30_mol,"b", label = "Au 30")
+# # plt.plot(list_wavelength, R_gold30_nomol,"xb")#, label = "30 nm")
+# # plt.plot(list_wavelength, R_gold40_mol,"g", label = "Au 40")
+# # plt.plot(list_wavelength, R_gold40_nomol,"xg")#, label = "40 nm")
+# # #plt.plot(list_wavelength, R_gold50_mol,"c", label = "Au 50")
+# # #plt.plot(list_wavelength, R_gold50_nomol, label = "50 nm")
+# # #plt.plot(list_wavelength, R_gold100_mol,"y", label = "Au 100")
+# # #plt.plot(list_wavelength, R_gold100_nomol, label = "100 nm")
+# # #plt.plot(list_wavelength, R_gold200_mol, label = "Au 200")
+# # #plt.plot(list_wavelength, R_gold200_nomol, label = "200 nm")
+# # plt.legend()
+# # plt.ylabel("Reflectance")
+# # plt.title("Gold thickness sensibility without molecules (lines) and with molecules (crosses)")
+# # plt.xlabel("Wavelength (nm)")
+
+# # plt.show(block=False)
+# # plt.savefig("spacer3/thickness_gold/mol_nomol_widthgoldAll_longspectrum.jpg")
+
+# plt.figure(2)
+# plt.plot(list_wavelength, R_gold20_mol, "r", label = "With molecules")
+# plt.plot(list_wavelength, R_gold20_nomol, "b", label = "without molecules")
 # plt.legend()
 # plt.ylabel("Reflectance")
-# plt.title("Dependance of width gold")
+# plt.title("Molecules sensibility (gold 20 nm)")
 # plt.xlabel("Wavelength (nm)")
-
 # plt.show(block=False)
-# plt.savefig("width_gold_dep/reflectance_wav_func_nofunc_widthgoldAll.jpg")
+# plt.savefig("spacer3/thickness_gold/mol_nomol_widthgold20_longspectrum.jpg")
+
+# plt.figure(3)
+# plt.plot(list_wavelength, R_gold30_mol, "r", label = "With molecules")
+# plt.plot(list_wavelength, R_gold30_nomol, "b", label = "without molecules")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Molecules sensibility (gold 30 nm)")
+# plt.xlabel("Wavelength (nm)")
+# plt.show(block=False)
+# plt.savefig("spacer3/thickness_gold/mol_nomol_widthgold30_longspectrum.jpg")
+
+# plt.figure(4)
+# plt.plot(list_wavelength, R_gold40_mol, "r", label = "With molecules")
+# plt.plot(list_wavelength, R_gold40_nomol, "b", label = "without molecules")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Molecules sensibility (gold 40 nm)")
+# plt.xlabel("Wavelength (nm)")
+# plt.show(block=False)
+# plt.savefig("spacer3/thickness_gold/mol_nomol_widthgold40_longspectrum.jpg")
 
 # plt.figure(5)
 # plt.plot(list_wavelength, R_gold5_func, label = "Au 5, with func")

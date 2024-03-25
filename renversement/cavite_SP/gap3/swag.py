@@ -839,27 +839,37 @@ def Field_grating(thick_up, thick_down, thick_gap, thick_reso, thick_gold, perio
 ### Swag-structure
 
 thick_up = 50
-thick_gap = 10 # hauteur de diéléctrique en dessous du cube
-thick_reso = 75 #hauteur du cube
+thick_gap = 3 # hauteur de diéléctrique en dessous du cube
+thick_reso = 70 #hauteur du cube
 thick_gold = 20 # hauteur de l'or au dessus du substrat
 #period = thick_reso + thick_gap + thick_gold # periode
-period = 600
+period = 1100
 thick_down = 50
 
 # A modifier selon le point de fonctionnement
-wavelength = 700.021635
+wavelength = 1200.021635
 angle = 0
 polarization = 1
 
 ## Paramètres des matériaux
 #perm_dielec = 1.41 ** 2 # spacer
-perm_dielec = 1
+perm_dielec = 1.45 ** 2
 #perm_Glass = 1.5 ** 2 # substrat
 perm_Ag = epsAgbb(wavelength) # argent
 perm_Au = epsAubb(wavelength) # or
 
 n_mod = 200 
-n_mod_total = 2 * n_mod + 1
+#n_mod_total = 2 * n_mod + 1
+
+### Verification du modèle de cavité pour le SP 
+effective_index_SP = np.sqrt(perm_Au / (1 + perm_Au))
+print(effective_index_SP)
+
+lam_1 = 571.4 
+lam_2 = 1246.7
+eff_wavelength_test = lam_2 - lam_1
+eff_indice_test = wavelength / eff_wavelength_test
+print(eff_indice_test)
 
 ### Influence du nombre de modes et de l'épaisseur du gap sur le coefficient de réflexion du GP
 # list_number_modes = np.linspace(10, 200, 100)
@@ -906,7 +916,7 @@ n_mod_total = 2 * n_mod + 1
 # plt.show(block=False)
 # plt.savefig("Phase_and_modulus_reflexion_GP_depending_NumberModes_thicknesses_gap_4_6_8_10.jpg")
 
-## Influence du nombre de modes sur le coefficient de réflexion du GP
+### Influence du nombre de modes sur le coefficient de réflexion du GP
 
 # list_number_modes = np.linspace(10, 200, 100)
 
@@ -941,7 +951,6 @@ n_mod_total = 2 * n_mod + 1
 # #plt.title("Wavelength dependance")
 # plt.show(block=False)
 # plt.savefig("Phase_and_modulus_reflexion_GP_depending_NumberModes_Au_Ag.jpg")
-# plt.savefig("Phase_and_modulus_reflexion_GP_depending_NumberModes_Au_Ag.pdf")
 
 ### Influence de l'angle sur le coefficient de réflexion du GP
 
@@ -979,7 +988,7 @@ n_mod_total = 2 * n_mod + 1
 # plt.savefig("Phase_and_modulus_reflexion_GP_depending_Angle_Au_Ag.jpg")
 
 
-## influence de la taille du gap sur le coefficient de réflexion du GP
+### influence de la taille du gap sur le coefficient de réflexion du GP
 # list_thick_gap = np.linspace(5, 30, 50)
 
 # R_down_GP_Ag = np.empty(list_thick_gap.size)
@@ -1012,7 +1021,6 @@ n_mod_total = 2 * n_mod + 1
 # #plt.title("Wavelength dependance")
 # plt.show(block=False)
 # plt.savefig("Phase_and_modulus_reflexion_GP_depending_GapThickness_Au_Ag.jpg")
-# plt.savefig("GP_gap.pdf")
 
 
 ### Influence de la longueur d'onde sur l'indice effectif du GP
@@ -1041,31 +1049,33 @@ n_mod_total = 2 * n_mod + 1
 # plt.savefig("effective_index.jpg")
 
 
-### Etude de l'influence de la taille du domaine (période) sur la réflexion du GP
-# list_period = np.linspace(100, 1500, 200)
-# R_GP_grating_Ag = np.empty(list_period.size)
-# phase_R_GP_grating_Ag = np.empty(list_period.size)
-# R_GP_grating_Au = np.empty(list_period.size)
-# phase_R_GP_grating_Au = np.empty(list_period.size)
-# #R_GP_aper = np.empty(list_period.size)
-# #phase_R_GP_aper = np.empty(list_period.size)
+## Etude de l'influence de la taille du domaine (période) sur la réflexion du GP
+list_period = np.linspace(100, 1500, 200)
+#R_GP_grating_Ag = np.empty(list_period.size)
+#phase_R_GP_grating_Ag = np.empty(list_period.size)
+R_GP_grating_Au = np.empty(list_period.size)
+phase_R_GP_grating_Au = np.empty(list_period.size)
+#R_GP_aper = np.empty(list_period.size)
+#phase_R_GP_aper = np.empty(list_period.size)
 
-# idx = 0
+idx = 0
 
-# for period in list_period:
-#     R_GP_grating_Au[idx], phase_R_GP_grating_Au[idx] = reflectance_grating(thick_up, thick_down, thick_gap, thick_reso, thick_gold, period, wavelength, angle, polarization, perm_dielec, perm_Au, n_mod)
-#     R_GP_grating_Ag[idx], phase_R_GP_grating_Ag[idx] = reflectance_grating(thick_up, thick_down, thick_gap, thick_reso, thick_gold, period, wavelength, angle, polarization, perm_dielec, perm_Ag, n_mod)
-#     idx += 1
+for period in list_period:
+    R_GP_grating_Au[idx], phase_R_GP_grating_Au[idx] = reflectance_grating(thick_up, thick_down, thick_gap, thick_reso, thick_gold, period, wavelength, angle, polarization, perm_dielec, perm_Au, n_mod)
+    #R_GP_grating_Ag[idx], phase_R_GP_grating_Ag[idx] = reflectance_grating(thick_up, thick_down, thick_gap, thick_reso, thick_gold, period, wavelength, angle, polarization, perm_dielec, perm_Ag, n_mod)
+    idx += 1
 
-# plt.figure(6)
-# plt.subplot(211)
-# plt.plot(list_period, R_GP_grating_Ag, "b", label="Argent")
-# plt.plot(list_period, R_GP_grating_Au, "r", label="Or")
-# plt.legend()
-# plt.ylabel("Module")
-# plt.title("Reflectance of the GP")
-# #plt.show(block=False)
-# #plt.savefig("Phase_and_modulus_reflexion_GP_depending_wavelength.jpg")
+plt.figure(2)
+#plt.subplot(211)
+#plt.plot(list_period, R_GP_grating_Ag, "b", label="Argent")
+plt.plot(list_period, R_GP_grating_Au) #, "r", label="Or")
+#plt.legend()
+plt.ylabel("Module")
+plt.title("Reflectance of the GP")
+plt.xlabel("Period (nm) ")
+plt.show(block=False)
+plt.savefig("Modulus_reflexion_GP_depending_period_Au.jpg")
+plt.savefig("Modulus_reflexion_GP_depending_period_Au.pdf")
 
 # plt.subplot(212)
 # plt.plot(list_period, phase_R_GP_grating_Ag, "b", label="Argent")
@@ -1129,42 +1139,41 @@ n_mod_total = 2 * n_mod + 1
 # plt.show(block=False)
 # plt.savefig("Champ_grating.jpg") 
 
-## Pour étudier l'influence de la longueur d'onde sur le coefficient de réflexion du GP
-list_wavelength = np.linspace(400, 800, 100)
+### Pour étudier l'influence de la longueur d'onde sur le coefficient de réflexion du GP
+# list_wavelength = np.linspace(400, 800, 100)
 
-R_down_GP_Ag = np.empty(list_wavelength.size)
-phase_R_down_GP_Ag = np.empty(list_wavelength.size)
+# #R_down_GP_Ag = np.empty(list_wavelength.size)
+# #phase_R_down_GP_Ag = np.empty(list_wavelength.size)
 
-R_down_GP_Au = np.empty(list_wavelength.size)
-phase_R_down_GP_Au = np.empty(list_wavelength.size)
+# R_down_GP_Au = np.empty(list_wavelength.size)
+# phase_R_down_GP_Au = np.empty(list_wavelength.size)
 
-idx = 0
+# idx = 0
 
-for wavelength in list_wavelength:
-    perm_Ag = epsAgbb(wavelength)
-    perm_Au = epsAubb(wavelength) # or
-    R_down_GP_Ag[idx], phase_R_down_GP_Ag[idx] = reflectance_grating(thick_up, thick_down, thick_gap, thick_reso, thick_gold, period, wavelength, angle, polarization, perm_dielec, perm_Ag, n_mod) 
-    R_down_GP_Au[idx], phase_R_down_GP_Au[idx] = reflectance_grating(thick_up, thick_down, thick_gap, thick_reso, thick_gold, period, wavelength, angle, polarization, perm_dielec, perm_Au, n_mod) 
-    idx += 1
+# for wavelength in list_wavelength:
+#     #perm_Ag = epsAgbb(wavelength)
+#     perm_Au = epsAubb(wavelength) # or
+#     #R_down_GP_Ag[idx], phase_R_down_GP_Ag[idx] = reflectance_grating(thick_up, thick_down, thick_gap, thick_reso, thick_gold, period, wavelength, angle, polarization, perm_dielec, perm_Ag, n_mod) 
+#     R_down_GP_Au[idx], phase_R_down_GP_Au[idx] = reflectance_grating(thick_up, thick_down, thick_gap, thick_reso, thick_gold, period, wavelength, angle, polarization, perm_dielec, perm_Au, n_mod) 
+#     idx += 1
 
-plt.figure(1)
-plt.subplot(211)
-plt.plot(list_wavelength, R_down_GP_Ag, "b", label="Ag")
-plt.plot(list_wavelength, R_down_GP_Au, "r", label="Au")
-plt.legend()
-plt.ylabel("Module")
-plt.title("Reflectance of the GP")
-#plt.show(block=False)
-#plt.savefig("Phase_and_modulus_reflexion_GP_depending_wavelength.jpg")
+# plt.figure(1)
+# #plt.subplot(211)
+# #plt.plot(list_wavelength, R_down_GP_Ag, "b", label="Argent")
+# plt.plot(list_wavelength, R_down_GP_Au) #, "r", label="Or")
+# #plt.legend()
+# plt.ylabel("Module")
+# plt.title("Reflectance of the GP")
+# plt.show(block=False)
+# plt.savefig("Modulus_reflexion_GP_depending_wavelength_Au.jpg")
 
-plt.subplot(212)
-plt.plot(list_wavelength, phase_R_down_GP_Ag, "b", label="Ag")
-plt.plot(list_wavelength, phase_R_down_GP_Au, "r", label="Au")
-plt.legend()
-plt.xlabel("Wavelength (nm) ")
-plt.ylabel("Phase")
-#plt.title("Wavelength dependance")
-plt.show(block=False)
-plt.savefig("Phase_and_modulus_reflexion_GP_depending_Wavelength_Au_Ag.jpg")
-plt.savefig("GP_Au_Ag.pdf")
+# plt.subplot(212)
+# plt.plot(list_wavelength, phase_R_down_GP_Ag, "b", label="Argent")
+# plt.plot(list_wavelength, phase_R_down_GP_Au, "r", label="Or")
+# plt.legend()
+# plt.xlabel("Wavelength (nm) ")
+# plt.ylabel("Phase")
+# #plt.title("Wavelength dependance")
+# plt.show(block=False)
+#plt.savefig("Phase_and_modulus_reflexion_GP_depending_Wavelength_Au_Ag.jpg")
 

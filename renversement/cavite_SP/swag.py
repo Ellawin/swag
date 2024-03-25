@@ -1049,32 +1049,34 @@ print(eff_indice_test)
 # plt.savefig("effective_index.jpg")
 
 
-### Etude de l'influence de la taille du domaine (période) sur la réflexion du GP
-# list_period = np.linspace(100, 1500, 200)
-# #R_GP_grating_Ag = np.empty(list_period.size)
-# #phase_R_GP_grating_Ag = np.empty(list_period.size)
-# R_GP_grating_Au = np.empty(list_period.size)
-# phase_R_GP_grating_Au = np.empty(list_period.size)
-# #R_GP_aper = np.empty(list_period.size)
-# #phase_R_GP_aper = np.empty(list_period.size)
+## Etude de l'influence de la taille du domaine (période) sur la réflexion du GP
+list_period = np.linspace(100, 1500, 200)
+#R_GP_grating_Ag = np.empty(list_period.size)
+#phase_R_GP_grating_Ag = np.empty(list_period.size)
+R_GP_grating_Au = np.empty(list_period.size)
+phase_R_GP_grating_Au = np.empty(list_period.size)
+#R_GP_aper = np.empty(list_period.size)
+#phase_R_GP_aper = np.empty(list_period.size)
 
-# idx = 0
+idx = 0
 
-# for period in list_period:
-#     R_GP_grating_Au[idx], phase_R_GP_grating_Au[idx] = reflectance_grating(thick_up, thick_down, thick_gap, thick_reso, thick_gold, period, wavelength, angle, polarization, perm_dielec, perm_Au, n_mod)
-#     #R_GP_grating_Ag[idx], phase_R_GP_grating_Ag[idx] = reflectance_grating(thick_up, thick_down, thick_gap, thick_reso, thick_gold, period, wavelength, angle, polarization, perm_dielec, perm_Ag, n_mod)
-#     idx += 1
+for period in list_period:
+    R_GP_grating_Au[idx], phase_R_GP_grating_Au[idx] = reflectance_grating(thick_up, thick_down, thick_gap, thick_reso, thick_gold, period, wavelength, angle, polarization, perm_dielec, perm_Au, n_mod)
+    #R_GP_grating_Ag[idx], phase_R_GP_grating_Ag[idx] = reflectance_grating(thick_up, thick_down, thick_gap, thick_reso, thick_gold, period, wavelength, angle, polarization, perm_dielec, perm_Ag, n_mod)
+    idx += 1
 
-# plt.figure(2)
-# #plt.subplot(211)
-# #plt.plot(list_period, R_GP_grating_Ag, "b", label="Argent")
-# plt.plot(list_period, R_GP_grating_Au) #, "r", label="Or")
-# #plt.legend()
-# plt.ylabel("Module")
-# plt.title("Reflectance of the GP")
-# plt.xlabel("Period (nm) ")
-# plt.show(block=False)
-# plt.savefig("Modulus_reflexion_GP_depending_period_Au.jpg")
+plt.figure(2)
+#plt.subplot(211)
+#plt.plot(list_period, R_GP_grating_Ag, "b", label="Argent")
+plt.plot(list_period, R_GP_grating_Au) #, "r", label="Or")
+#plt.legend()
+plt.ylabel("Module")
+plt.title("Reflectance of the GP")
+plt.xlabel("Period (nm) ")
+plt.show(block=False)
+plt.savefig("Modulus_reflexion_GP_depending_period_Au.jpg")
+plt.savefig("Modulus_reflexion_GP_depending_period_Au.pdf")
+
 
 # plt.subplot(212)
 # plt.plot(list_period, phase_R_GP_grating_Ag, "b", label="Argent")
