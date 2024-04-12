@@ -204,24 +204,24 @@ width_metallicLayer = width_metallicLayer / period
 k0 = 2 * np.pi / wavelength_norm
 a0 = k0 * np.sin(angle * np.pi / 180)
 
-#Pgp, Vgp = grating(k0, a0, polarization, perm_metal, perm_dielec, n, np.array([[width_gap, width_reso]]))
-#Pplan, Vplan = grating(k0, a0, polarization, perm_metal, perm_dielec, n, np.array([[width_gap + width_reso, 0]]))
+Pgp, Vgp = grating(k0, a0, polarization, perm_metal, perm_dielec, n, np.array([[width_gap, width_reso]]))
+Pplan, Vplan = grating(k0, a0, polarization, perm_metal, perm_dielec, n, np.array([[width_gap + width_reso, 0]]))
 
-P1, V1 = homogene(k0,a0,polarization,perm_dielec,n)
-P2, V2 = homogene(k0, a0, polarization, perm_metal, n)
+#P1, V1 = homogene(k0,a0,polarization,perm_dielec,n)
+#P2, V2 = homogene(k0, a0, polarization, perm_metal, n)
 
-S = interface(P1,P2)
+S = interface(Pgp,Pplan)
     ## PM, quand on travaille à longueur d'onde fixée et qu'on a calculé l'indice effectif une fois pour toute
     #GP_effective_index = 3.87 + 0.13j # pour un lam de 700
-    #position_GP = np.argmin(abs(Vgp - GP_effective_index * k0))
+    #= np.argmin(abs(V1 - GP_effective_index * k0))
     
-#position_GP = np.argmin(np.imag(Vgp))
-#neff_GP = np.real(Vgp[position_GP] / k0)
+position_GP = np.argmin(np.imag(Vgp))
+neff_GP = np.real(Vgp[position_GP] / k0)
 
 #position_SP = np.argmin(np.imag(Vplan))
 #neff_plan = np.real(Vplan[position_SP] / k0)
 
-r = S[n_mod,n_mod]
+r = S[position_GP,position_GP]
 
 R_GP = abs(r)**2 
 phase_R_GP = np.angle(r)
