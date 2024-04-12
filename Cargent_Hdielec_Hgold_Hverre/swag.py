@@ -496,7 +496,7 @@ thick_super = 200
 width_reso = 75 # largeur du cube
 thick_gap = 5 # hauteur de diéléctrique en dessous du cube
 thick_reso = 75 #hauteur du cube
-#thick_gold = 20 # hauteur de l'or au dessus du substrat
+thick_gold = 20 # hauteur de l'or au dessus du substrat
 period = 500.2153 # periode
 
 # Largeur de la fibre
@@ -506,68 +506,68 @@ width_fiber = 0
 thick_sub = 200
 
 # A modifier selon le point de fonctionnement
-#wavelength = 700.021635
-angle = 20
+wavelength = 700.021635
+angle = 0
 polarization = 1
 
 ## Paramètres des matériaux
 perm_dielec = 1.41 ** 2 # spacer
 perm_Glass = 1.5 ** 2 # substrat
-#perm_Ag = epsAgbb(wavelength) # argent
-#perm_Au = epsAubb(wavelength) # or
+perm_Ag = epsAgbb(wavelength) # argent
+perm_Au = epsAubb(wavelength) # or
 
 n_mod = 50 
 n_mod_total = 2 * n_mod + 1
 
-### Etude de la dépendance de la réflexion à la longueur d'onde, en fonction de l'épaisseur de gold
-thick_gold0 = 0
-thick_gold10 = 10
-thick_gold20 = 20
-thick_gold30 = 30
-thick_gold40 = 40 
-thick_gold50 = 50
-thick_gold100 = 100
-thick_gold200 = 200
+# ### Etude de la dépendance de la réflexion à la longueur d'onde, en fonction de l'épaisseur de gold
+# thick_gold0 = 0
+# thick_gold10 = 10
+# thick_gold20 = 20
+# thick_gold30 = 30
+# thick_gold40 = 40 
+# thick_gold50 = 50
+# thick_gold100 = 100
+# thick_gold200 = 200
 
-list_wavelength = np.linspace(500, 1200, 200)
-R_gold0 = np.empty(list_wavelength.size)
-R_gold10 = np.empty(list_wavelength.size)
-R_gold20 = np.empty(list_wavelength.size)
-R_gold30 = np.empty(list_wavelength.size)
-R_gold40 = np.empty(list_wavelength.size)
-R_gold50 = np.empty(list_wavelength.size)
-R_gold100 = np.empty(list_wavelength.size)
-R_gold200 = np.empty(list_wavelength.size)
-idx = 0
+# list_wavelength = np.linspace(500, 1200, 200)
+# R_gold0 = np.empty(list_wavelength.size)
+# R_gold10 = np.empty(list_wavelength.size)
+# R_gold20 = np.empty(list_wavelength.size)
+# R_gold30 = np.empty(list_wavelength.size)
+# R_gold40 = np.empty(list_wavelength.size)
+# R_gold50 = np.empty(list_wavelength.size)
+# R_gold100 = np.empty(list_wavelength.size)
+# R_gold200 = np.empty(list_wavelength.size)
+# idx = 0
 
-for wavelength in list_wavelength:
-    perm_Ag = epsAgbb(wavelength) # argent
-    perm_Au = epsAubb(wavelength)
-    R_gold0[idx] = reflectance(thick_super, width_reso, thick_gap, thick_reso, thick_gold0, period, width_fiber, thick_sub, wavelength, angle, polarization, perm_dielec, perm_Glass, perm_Ag, perm_Au, n_mod)
-    R_gold10[idx] = reflectance(thick_super, width_reso, thick_gap, thick_reso, thick_gold10, period, width_fiber, thick_sub, wavelength, angle, polarization, perm_dielec, perm_Glass, perm_Ag, perm_Au, n_mod)
-    R_gold20[idx] = reflectance(thick_super, width_reso, thick_gap, thick_reso, thick_gold20, period, width_fiber, thick_sub, wavelength, angle, polarization, perm_dielec, perm_Glass, perm_Ag, perm_Au, n_mod)
-    R_gold30[idx] = reflectance(thick_super, width_reso, thick_gap, thick_reso, thick_gold30, period, width_fiber, thick_sub, wavelength, angle, polarization, perm_dielec, perm_Glass, perm_Ag, perm_Au, n_mod)
-    R_gold40[idx] = reflectance(thick_super, width_reso, thick_gap, thick_reso, thick_gold40, period, width_fiber, thick_sub, wavelength, angle, polarization, perm_dielec, perm_Glass, perm_Ag, perm_Au, n_mod)
-    R_gold50[idx] = reflectance(thick_super, width_reso, thick_gap, thick_reso, thick_gold50, period, width_fiber, thick_sub, wavelength, angle, polarization, perm_dielec, perm_Glass, perm_Ag, perm_Au, n_mod)
-    R_gold100[idx] = reflectance(thick_super, width_reso, thick_gap, thick_reso, thick_gold100, period, width_fiber, thick_sub, wavelength, angle, polarization, perm_dielec, perm_Glass, perm_Ag, perm_Au, n_mod)
-    R_gold200[idx] = reflectance(thick_super, width_reso, thick_gap, thick_reso, thick_gold200, period, width_fiber, thick_sub, wavelength, angle, polarization, perm_dielec, perm_Glass, perm_Ag, perm_Au, n_mod)
-    idx += 1
+# for wavelength in list_wavelength:
+#     perm_Ag = epsAgbb(wavelength) # argent
+#     perm_Au = epsAubb(wavelength)
+#     R_gold0[idx] = reflectance(thick_super, width_reso, thick_gap, thick_reso, thick_gold0, period, width_fiber, thick_sub, wavelength, angle, polarization, perm_dielec, perm_Glass, perm_Ag, perm_Au, n_mod)
+#     R_gold10[idx] = reflectance(thick_super, width_reso, thick_gap, thick_reso, thick_gold10, period, width_fiber, thick_sub, wavelength, angle, polarization, perm_dielec, perm_Glass, perm_Ag, perm_Au, n_mod)
+#     R_gold20[idx] = reflectance(thick_super, width_reso, thick_gap, thick_reso, thick_gold20, period, width_fiber, thick_sub, wavelength, angle, polarization, perm_dielec, perm_Glass, perm_Ag, perm_Au, n_mod)
+#     R_gold30[idx] = reflectance(thick_super, width_reso, thick_gap, thick_reso, thick_gold30, period, width_fiber, thick_sub, wavelength, angle, polarization, perm_dielec, perm_Glass, perm_Ag, perm_Au, n_mod)
+#     R_gold40[idx] = reflectance(thick_super, width_reso, thick_gap, thick_reso, thick_gold40, period, width_fiber, thick_sub, wavelength, angle, polarization, perm_dielec, perm_Glass, perm_Ag, perm_Au, n_mod)
+#     R_gold50[idx] = reflectance(thick_super, width_reso, thick_gap, thick_reso, thick_gold50, period, width_fiber, thick_sub, wavelength, angle, polarization, perm_dielec, perm_Glass, perm_Ag, perm_Au, n_mod)
+#     R_gold100[idx] = reflectance(thick_super, width_reso, thick_gap, thick_reso, thick_gold100, period, width_fiber, thick_sub, wavelength, angle, polarization, perm_dielec, perm_Glass, perm_Ag, perm_Au, n_mod)
+#     R_gold200[idx] = reflectance(thick_super, width_reso, thick_gap, thick_reso, thick_gold200, period, width_fiber, thick_sub, wavelength, angle, polarization, perm_dielec, perm_Glass, perm_Ag, perm_Au, n_mod)
+#     idx += 1
 
-plt.figure(13)
-plt.plot(list_wavelength, R_gold0, "r", label="R gold 0")
-plt.plot(list_wavelength, R_gold10, "b", label="R gold 10")
-plt.plot(list_wavelength, R_gold20, "k", label="R gold 20")
-plt.plot(list_wavelength, R_gold30, "g", label="R gold 30")
-plt.plot(list_wavelength, R_gold40, "r", label="R gold 40")
-plt.plot(list_wavelength, R_gold50, "m", label="R gold 50")
-plt.plot(list_wavelength, R_gold100, "y", label = "R gold 100")
-plt.plot(list_wavelength, R_gold200, "0.7", label="R gold 200")
-plt.legend()
-plt.xlabel("Wavelength (nm) ")
-plt.ylabel("Module of reflectance")
-plt.title("Wavelength dependance, gold thickness dependance")
-plt.show(block=False)
-plt.savefig("reflectance_dependanceWavelength_ThicknessGold_theta20.jpg")
+# plt.figure(13)
+# plt.plot(list_wavelength, R_gold0, "r", label="R gold 0")
+# plt.plot(list_wavelength, R_gold10, "b", label="R gold 10")
+# plt.plot(list_wavelength, R_gold20, "k", label="R gold 20")
+# plt.plot(list_wavelength, R_gold30, "g", label="R gold 30")
+# plt.plot(list_wavelength, R_gold40, "r", label="R gold 40")
+# plt.plot(list_wavelength, R_gold50, "m", label="R gold 50")
+# plt.plot(list_wavelength, R_gold100, "y", label = "R gold 100")
+# plt.plot(list_wavelength, R_gold200, "0.7", label="R gold 200")
+# plt.legend()
+# plt.xlabel("Wavelength (nm) ")
+# plt.ylabel("Module of reflectance")
+# plt.title("Wavelength dependance, gold thickness dependance")
+# plt.show(block=False)
+# plt.savefig("reflectance_dependanceWavelength_ThicknessGold_theta20.jpg")
 
 
 ### Pour avoir une représentation de la structure (WIP)
@@ -602,24 +602,24 @@ plt.savefig("reflectance_dependanceWavelength_ThicknessGold_theta20.jpg")
 # plt.savefig("Field_Xdessous_L250_NR.jpg") 
 
 
-### Pour étudier l'influence de la largeur du résonateur
+## Pour étudier l'influence de la largeur du résonateur
 
-# list_L = np.linspace(50, 350, 350-50)
-# R = np.empty(list_L.size)
-# idx = 0
+list_L = np.linspace(30, 350, 350-50)
+R = np.empty(list_L.size)
+idx = 0
 
-# for width_reso in list_L:   
-#     R[idx] = reflectance(thick_super, width_reso, thick_gap, thick_reso, thick_gold, period, width_fiber, thick_sub, wavelength, angle, polarization, perm_dielec, perm_Glass, perm_Ag, perm_Au, n_mod)
-#     idx += 1
+for width_reso in list_L:   
+    R[idx] = reflectance(thick_super, width_reso, thick_gap, thick_reso, thick_gold, period, width_fiber, thick_sub, wavelength, angle, polarization, perm_dielec, perm_Glass, perm_Ag, perm_Au, n_mod)
+    idx += 1
 
-# plt.figure(2)
-# plt.plot(list_L, R) #, "xb", label="avec fonction" )
-# plt.legend()
-# plt.xlabel("Width of the rod")
-# plt.ylabel("r0")
-# plt.title("Cavity size dependance of the reflection")
-# plt.show(block=False)
-# plt.savefig("reflectance_dependanceWidthReso_lam700.jpg")
+plt.figure(1)
+plt.plot(list_L, R) #, "xb", label="avec fonction" )
+plt.legend()
+plt.xlabel("Width of the nanocube")
+plt.ylabel("R")
+plt.title("Reflectance of the resonator")
+plt.show(block=False)
+plt.savefig("reflectance_dependanceWidthReso_lam700_versionSeminar.pdf")
 
 
 ### Pour étudier la dépendance en longueur d'onde du coefficient de réflexion / tranmission selon si on éclaire par dessus / par dessous
