@@ -159,10 +159,10 @@ def reflectance(width_reso, width_gap, width_metallicLayer, period, perm_dielec,
 
     r = S[position_GP, position_GP]
 
-    R_GP = abs(S[position_GP, position_GP]) ** 2 
-    phase_R_GP = np.angle(S[position_GP, position_GP])
+    R_GP = abs(r) ** 2
+    phase_R_GP = np.angle(r)
 
-    return Vgp, position_GP, S, r, neff_GP, neff_plan, R_GP, phase_R_GP#, np.abs(Vdown[position_GP] / k0), np.abs(GP_effective_index)
+    return r, R_GP, phase_R_GP, position_GP
 
 wavelength = 600
 
@@ -170,7 +170,7 @@ width_reso = 70
 width_gap = 10
 width_metallicLayer = 220
 
-period = 300
+#period = 300
 angle = 0
 polarization = 1
 
@@ -179,58 +179,68 @@ perm_metal = epsAgbb(wavelength)
 
 n_mod = 70
 
-n = 2 * n_mod + 1
-    
-    ## trouver le mode du GP avec PyMoosh
-    #material_list = [1., 'Silver']
-    #layer_down = [1,0,1]
-    
-    # Find the mode (it's unique) which is able to propagate in the GP gap
-    #start_index_eff = 4
-    #tol = 1e-12
-    #step_max = 50000
-    #thicknesses_gp = [300,10,300]
-    #Layer_gp = pm.Structure(material_list, layer_down, thicknesses_gp)
-    #GP_effective_index = pm.steepest(start_index_eff, tol, step_max, Layer_gp, wavelength, polarization)
-    #print("GP effective index = ", GP_effective_index)
+### Etude de la variation de la réflexion du GP en fonction de la periode
+list_period = np.linspace(100,600,100)
+RGP = np.empty(list_period.size)
+RGP_phase = np.empty(list_period.size)
+idx = 0
+for period in list_period:
+    r, RGP[idx], RGP_phase[idx], position_GP_func = reflectance(width_reso, width_gap, width_metallicLayer, period, perm_dielec, perm_metal, angle, wavelength, polarization, n_mod)
+    idx += 1
 
-    # Adimensionalisation
-wavelength_norm = wavelength / period
-    
-width_reso = width_reso / period
-width_gap = width_gap / period
-width_metallicLayer = width_metallicLayer / period
+plt.figure(2)
+plt.subplot(211)
+plt.plot(list_period, RGP)
+plt.ylabel("Module")
+plt.title("Reflectance of the GP")
+plt.subplot(212)
+plt.plot(list_period, RGP_phase)
+plt.xlabel("Period (nm)")
+plt.ylabel('Phase')
+plt.show(block=False)
+plt.savefig("R_gp_rcwa2D_depending_period.jpg")
 
-k0 = 2 * np.pi / wavelength_norm
-a0 = k0 * np.sin(angle * np.pi / 180)
+### Validation de la fonction reflectance : OK
 
-Pgp, Vgp = grating(k0, a0, polarization, perm_metal, perm_dielec, n, np.array([[width_gap, width_reso]]))
-Pplan, Vplan = grating(k0, a0, polarization, perm_metal, perm_dielec, n, np.array([[width_gap + width_reso, 0]]))
+    ## avec la fonction
+#r_func, R_GP_func, phase_R_GP_func, position_GP_func = reflectance(width_reso, width_gap, width_metallicLayer, period, perm_dielec, perm_metal, angle, wavelength, polarization, n_mod)
 
-#P1, V1 = homogene(k0,a0,polarization,perm_dielec,n)
-#P2, V2 = homogene(k0, a0, polarization, perm_metal, n)
+# print("avec la fonction")
+# print("R_GPf = ", R_GP_func)
+# print("phase_R_GPf =", phase_R_GP_func)
+# print("rf = ", r_func)
+# print("position GP =", position_GP_func)
 
-S = interface(Pgp,Pplan)
-    ## PM, quand on travaille à longueur d'onde fixée et qu'on a calculé l'indice effectif une fois pour toute
-    #GP_effective_index = 3.87 + 0.13j # pour un lam de 700
-    #= np.argmin(abs(V1 - GP_effective_index * k0))
-    
-position_GP = np.argmin(np.imag(Vgp))
-neff_GP = np.real(Vgp[position_GP] / k0)
+# ### Etude de la variation de la réflexion du GP en fonction de la longueur d'onde
+# list_wavelength = np.linspace(300,900,100)
+# RGP = np.empty(list_wavelength.size)
+# RGP_phase = np.empty(list_wavelength.size)
+# idx = 0
+# for wavelength in list_wavelength:
+#     perm_metal = epsAgbb(wavelength)
+#     r, RGP[idx], RGP_phase[idx], position_GP_func = reflectance(width_reso, width_gap, width_metallicLayer, period, perm_dielec, perm_metal, angle, wavelength, polarization, n_mod)
+#     idx += 1
 
-#position_SP = np.argmin(np.imag(Vplan))
-#neff_plan = np.real(Vplan[position_SP] / k0)
+# plt.figure(1)
+# plt.subplot(211)
+# plt.plot(list_wavelength, RGP)
+# plt.ylabel("Module")
+# plt.title("Reflectance of the GP")
+# plt.subplot(212)
+# plt.plot(list_wavelength, RGP_phase)
+# plt.xlabel("Wavelength (nm)")
+# plt.ylabel('Phase')
+# plt.show(block=False)
+# plt.savefig("R_gp_rcwa2D_depending_lambda.jpg")
 
-r = S[position_GP,position_GP]
+# ### Validation de la fonction reflectance : OK
 
-R_GP = abs(r)**2 
-phase_R_GP = np.angle(r)
+#     ## avec la fonction
+# #r_func, R_GP_func, phase_R_GP_func, position_GP_func = reflectance(width_reso, width_gap, width_metallicLayer, period, perm_dielec, perm_metal, angle, wavelength, polarization, n_mod)
 
-#Vgp, position_GP, S, r, neff_GP, neff_plan, R_GP, phase_R_GP = reflectance(width_reso, width_gap, width_metallicLayer, period, perm_dielec, perm_metal, angle, wavelength, polarization, n_mod)
-#print("neff_GP = ", neff_GP)
-#print("neff_plan = ", neff_plan)
-print("R_GP = ", R_GP)
-print("phase_R_GP =", phase_R_GP)
-print("r = ", r)
-#print("Position GP = ", position_GP)
-#print("V GP = ", Vgp)
+# # print("avec la fonction")
+# # print("R_GPf = ", R_GP_func)
+# # print("phase_R_GPf =", phase_R_GP_func)
+# # print("rf = ", r_func)
+# # print("position GP =", position_GP_func)
+
