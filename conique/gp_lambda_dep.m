@@ -10,15 +10,15 @@ parfor lambda = list_lambda
     j
     e_ag = epsAgbb(lambda);
     gp.a0=0;
-    gp.ox=[0,150,160,300];
+    gp.ox=[0,80,90,300];
     gp.nx=gp.ox;
-    gp.oy=[0,1000];
+    gp.oy=[0,100];
     gp.ny=gp.oy;
-    gp.Mm=70;
+    gp.Mm=30;
     gp.Nm=0;
     gp.mu=[1,1,1];
     gp.eps=[e_ag,1,e_ag];
-    gp.eta=0.99;
+    gp.eta=0.01;
     gp.k0=2*pi/lambda;
     gp.pmlx=[0,0,0];
     gp.pmly=[0];
@@ -33,7 +33,7 @@ parfor lambda = list_lambda
 
     [P1,V1]=reseau(gp);
     [a,b]=min(imag(V1));
-    #n_eff=real(V1(b)/gp.k0)
+    n_eff(j)=real(V1(b)/gp.k0);
 
     [P2, V2] = reseau(plan);
     [c,d] = min(imag(V2));
@@ -46,18 +46,30 @@ parfor lambda = list_lambda
     R_GP(j) = abs(S(b,b))**2;
     phase_R_GP(j) = angle(S(b,b));
 
-    j= j+1;
+    j = j+1;
     #b
 endparfor
 
-figure(1)
-plot(list_lambda, R_GP, 'linewidth', 3)
-xlabel('Wavelength (nm)')
-ylabel('R GP')
-savefig('Rgp_octave_lambda.jpg')
+figure(7)
+subplot(2,1,1)
+plot(list_lambda, real(n_eff))
+ylabel("Real part")
+subplot(2,1,2)
+plot(list_lambda, imag(n_eff))
+ylabel("Imaginary part")
+xlabel("Wavelength (nm)")
+savefig('neff_GP_octave.jpg')
 
-figure(2)
-plot(list_lambda, phase_R_GP, 'linewidth', 3)
+figure(6)
+subplot(2,1,1)
+plot(list_lambda, R_GP, 'linewidth', 2)
+#xlabel('Wavelength (nm)')
+ylabel('Module')
+#savefig('Rgp_octave_lambda.jpg')
+
+#figure(6)
+subplot(2,1,2)
+plot(list_lambda, phase_R_GP, 'linewidth', 2)
 xlabel('Wavelength (nm)')
-ylabel('Phase R GP')
-savefig('Phase_Rgp_octave_lambda.jpg')
+ylabel('Phase')
+savefig('Rgp_octave_lambda.jpg')
