@@ -1,0 +1,6 @@
+Notes
+
+Rgp_xpml : on vient 'manger' l'épaisseur de métal pour inérer la perm_metal
+Rgp_xpml_v2 : on rajoute une épaisseur de pml à côté du métal
+
+Dans les deux cas, on observe des sauts brutaux et des coeffs qui dépassent 1 -> pas le bon mode
