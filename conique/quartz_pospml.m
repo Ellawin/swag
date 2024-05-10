@@ -3,28 +3,28 @@ lambda = 600;
 e_ag=epsAgbb(lambda);
 
 N=100;
-list_pos_pml = [50:250];
+list_thick_pml = [50:250];
 j=1
 
-parfor pos_pml = list_pos_pml
+parfor thick_pml = list_thick_pml
     gp.a0=0;
-    gp.ox=[0,0+pos_pml,250+pos_pml,260+pos_pml,500+pos_pml];
+    gp.ox=[0,thick_pml,300+thick_pml,310+thick_pml,320+thick_pml, 550+thick_pml,750+thick_pml];
     gp.nx=gp.ox;
-    gp.oy=[0,1000];
+    gp.oy=[0,10];
     gp.ny=gp.oy;
     gp.Mm=100;
     gp.Nm=0;
-    gp.mu=[1,1,1,1];
-    gp.eps=[e_ag,e_ag,1,e_ag];
+    gp.mu=[1,1,1,1,1,1];
+    gp.eps=[1.54,1.54,e_ag, 1, e_ag, e_ag];
     gp.eta=0.99;
     gp.k0=2*pi/lambda;
-    gp.pmlx=[1,0,0,0];
+    gp.pmlx=[1,0,0,0,0,1];
     gp.pmly=[0];
     gp.b0=0;
 
     plan=gp;
-    plan.eps=[e_ag,e_ag,1,1];
-    plan.pmlx=[1,0,0,0];
+    plan.eps=[1.54,1.54,e_ag,1,1,1];
+    plan.pmlx=[1,0,0,0,0,1];
 
 
 #disp('avec pml')
@@ -55,13 +55,13 @@ parfor pos_pml = list_pos_pml
     #b
 endparfor
 
-figure(2)
-plot(list_pos_pml, R_GP, 'linewidth', 3)
+figure(3)
+plot(list_thick_pml, R_GP, 'linewidth', 3)
 #hold on
 #plot(list_pos_pml, R_GP2, 'linewidth', 3, "r")
 xlabel('position of the PML')
 ylabel('R GP')
 #legend('min de la partie imaginaire', 'plus proche de PM')
-print('Rgp_xpml_100modes_pmlAg.jpeg')
-print('Rgp_xpml_100modes_pmlAg.pdf')
-print('Rgp_xpml_100modes_pmlAg.eps')
+print('Rgp_quartz.jpeg')
+print('Rgp_quartz.pdf')
+print('Rgp_quartz.eps')
