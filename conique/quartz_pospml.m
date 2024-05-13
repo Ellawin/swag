@@ -30,15 +30,15 @@ parfor thick_pml = list_thick_pml
 #disp('avec pml')
 
     [P1,V1]=reseau(gp);
-    #neff_gp_PM = 2.8 + 0.09i;
-    #[a2, b2] = min(abs(V1 - neff_gp_PM * gp.k0));
+    neff_gp_PM = 4.02 + 0.19i;
+    [a2, b2] = min(abs(V1 - neff_gp_PM * gp.k0));
     #b2
     [a,b]=min(imag(V1));
     #b
     #n_eff=real(V1(b)/gp.k0)
 
     [P2, V2] = reseau(plan);
-    [c,d] = min(imag(V2));
+    #[c,d] = min(imag(V2));
 #[c,d] = min(abs(V2 - plan.k0));
     #n_sp = real(V2(d)/plan.k0)
 
@@ -46,9 +46,9 @@ parfor thick_pml = list_thick_pml
     S = interface(P1,P2);
     #S(b,b)
     R_GP(j) = abs(S(b,b))**2;
-    phase_R_GP(j) = angle(S(b,b));
+    #phase_R_GP(j) = angle(S(b,b));
 
-    #R_GP2(j) = abs(S(b2,b2))**2;
+    R_GP2(j) = abs(S(b2,b2))**2;
     #phase_R_GP2(j) = angle(S(b2,b2));
 
     j= j+1
@@ -57,11 +57,15 @@ endparfor
 
 figure(3)
 plot(list_thick_pml, R_GP, 'linewidth', 3)
-#hold on
-#plot(list_pos_pml, R_GP2, 'linewidth', 3, "r")
-xlabel('position of the PML')
+hold on
+plot(list_thick_pml, R_GP2, 'linewidth', 3, "r")
+xlabel('Thickness of the PML')
 ylabel('R GP')
 #legend('min de la partie imaginaire', 'plus proche de PM')
-print('Rgp_quartz.jpeg')
-print('Rgp_quartz.pdf')
-print('Rgp_quartz.eps')
+print('Rgp_quartz_comp.jpeg')
+print('Rgp_quartz_comp.pdf')
+print('Rgp_quartz_comp.eps')
+
+
+### mettre que 100 points
+### trouver le régime de fonctionnement qui font que PML convaincantes

@@ -6,8 +6,8 @@ from scipy.linalg import toeplitz, inv
 
 i = complex(0,1)
 
-material_list = [1., 'Silver']
-stack = [1,0,1]
+material_list = [1., 1.54, 'Silver']
+stack = [1,2,0,2]
 
 wavelength = 600
 polarization = 1
@@ -37,7 +37,7 @@ step_max = 10000
 # plt.savefig("effective_index_PM.pdf")
 
 
-thicknesses = [150,10,140]
+thicknesses = [500,10,10, 500]
 Layers = pm.Structure(material_list, stack, thicknesses)
 neff_GP = pm.steepest(start_index_eff, tol, step_max, Layers, wavelength, polarization)
 
