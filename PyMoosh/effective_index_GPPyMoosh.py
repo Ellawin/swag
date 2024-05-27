@@ -7,7 +7,7 @@ from scipy.linalg import toeplitz, inv
 i = complex(0,1)
 
 material_list = [1., 1.54, 'Silver']
-stack = [1,2,0,2]
+#stack = [1,2,0,2]
 
 wavelength = 600
 polarization = 1
@@ -17,28 +17,28 @@ start_index_eff = 4
 tol = 1e-12
 step_max = 10000
 
-# list_gap = np.linspace(1,25,100)
-# idx = 0
+list_gap = np.linspace(1,25,100)
+idx = 0
 
-# GP_effective_index = np.empty(list_gap.size)
+GP_effective_index = np.empty(list_gap.size)
 
-# for thick_gap in list_gap:
-#     thicknesses = [70,thick_gap,20]
-#     Layers = pm.Structure(material_list, stack, thicknesses)
-#     GP_effective_index[idx] = pm.steepest(start_index_eff, tol, step_max, Layers, wavelength, polarization)
-#     idx +=1
+for thick_gap in list_gap:
+    thicknesses = [70,thick_gap,20]
+    Layers = pm.Structure(material_list, stack, thicknesses)
+    GP_effective_index[idx] = pm.steepest(start_index_eff, tol, step_max, Layers, wavelength, polarization)
+    idx +=1
 
-# plt.figure(1)
-# plt.plot(list_gap, GP_effective_index)
-# plt.xlabel("Gap thickness (nm)")
-# plt.ylabel("$n_{eff}$")
-# plt.title("Effective index of Gap-Plasmon")
-# plt.show(block=False)
-# plt.savefig("effective_index_PM.pdf")
+plt.figure(1)
+plt.plot(list_gap, GP_effective_index)
+plt.xlabel("Gap thickness (nm)")
+plt.ylabel("$n_{eff}$")
+plt.title("Effective index of Gap-Plasmon")
+plt.show(block=False)
+plt.savefig("effective_index_PM.pdf")
 
 
-thicknesses = [500,10,10, 500]
-Layers = pm.Structure(material_list, stack, thicknesses)
-neff_GP = pm.steepest(start_index_eff, tol, step_max, Layers, wavelength, polarization)
+# thicknesses = [500,10,10, 500]
+# Layers = pm.Structure(material_list, stack, thicknesses)
+# neff_GP = pm.steepest(start_index_eff, tol, step_max, Layers, wavelength, polarization)
 
-print(neff_GP)
+# print(neff_GP)
