@@ -233,7 +233,7 @@ def reflectance(thick_super, width_reso, thick_gap, thick_reso, thick_gold, peri
     phase_R_up_NR = np.angle(S[n_mod, n_mod])
     phase_R_down_NR = np.angle(S[n + n_mod, n + n_mod])
 
-    return Rup #, Tup, Rdown, Tdown, phase_R_down_NR, phase_R_up_NR 
+    return Rup, Tup, Rdown, Tdown, phase_R_down_NR, phase_R_up_NR 
 
 def Field(thick_super, width_reso, thick_gap, thick_reso, thick_gold, period, width_fiber, thick_sub, wavelength, angle, polarization, perm_dielec, perm_Glass, perm_Ag, perm_Au,  n_mod):
     thick_super = thick_super / period 
@@ -604,71 +604,71 @@ n_mod_total = 2 * n_mod + 1
 
 ## Pour étudier l'influence de la largeur du résonateur
 
-list_L = np.linspace(30, 350, 350-50)
-R = np.empty(list_L.size)
-idx = 0
-
-for width_reso in list_L:   
-    R[idx] = reflectance(thick_super, width_reso, thick_gap, thick_reso, thick_gold, period, width_fiber, thick_sub, wavelength, angle, polarization, perm_dielec, perm_Glass, perm_Ag, perm_Au, n_mod)
-    idx += 1
-
-plt.figure(1)
-plt.plot(list_L, R) #, "xb", label="avec fonction" )
-plt.legend()
-plt.xlabel("Width of the nanocube")
-plt.ylabel("R")
-plt.title("Reflectance of the resonator")
-plt.show(block=False)
-plt.savefig("reflectance_dependanceWidthReso_lam700_versionSeminar.pdf")
-
-
-### Pour étudier la dépendance en longueur d'onde du coefficient de réflexion / tranmission selon si on éclaire par dessus / par dessous
-
-
-# list_wavelength = np.linspace(500, 1200, 100)
-# #R_up = np.empty(list_wavelength.size)
-# #R_down = np.empty(list_wavelength.size)
-# #T_up = np.empty(list_wavelength.size)
-# #T_down = np.empty(list_wavelength.size)
-# R_up_NR = np.empty(list_wavelength.size)
-# R_down_NR = np.empty(list_wavelength.size)
-# T_up_NR = np.empty(list_wavelength.size)
-# T_down_NR = np.empty(list_wavelength.size)
-# phase_R_up_NR = np.empty(list_wavelength.size)
-# phase_R_down_NR = np.empty(list_wavelength.size)
+# list_L = np.linspace(30, 350, 350-50)
+# R = np.empty(list_L.size)
 # idx = 0
 
-# for wavelength in list_wavelength:
-#     perm_Ag = epsAgbb(wavelength) # argent
-#     perm_Au = epsAubb(wavelength)
-#     R_up_NR[idx], T_up_NR[idx], R_down_NR[idx], T_down_NR[idx], phase_R_down_NR[idx], phase_R_up_NR[idx] = reflectance(thick_super, width_reso, thick_gap, thick_reso, thick_gold, period, width_fiber, thick_sub, wavelength, angle, polarization, perm_dielec, perm_Glass, perm_Ag, perm_Au, n_mod)
-#     #R_up[idx], T_up[idx], R_down[idx], T_down[idx] = reflectance(thick_super, 0, thick_gap, 0, thick_gold, period, width_fiber, thick_sub, wavelength, angle, polarization, perm_dielec, perm_Glass, perm_Ag, perm_Au, n_mod)
+# for width_reso in list_L:   
+#     R[idx] = reflectance(thick_super, width_reso, thick_gap, thick_reso, thick_gold, period, width_fiber, thick_sub, wavelength, angle, polarization, perm_dielec, perm_Glass, perm_Ag, perm_Au, n_mod)
 #     idx += 1
 
-# plt.figure(8)
-# plt.subplot(211)
-# #plt.plot(list_wavelength, R_up, "r", label="R up")
-# #plt.plot(list_wavelength, R_down, "b", label="R down")
-# #plt.plot(list_wavelength, T_up, "g", label="T up")
-# #plt.plot(list_wavelength, T_down, "k", label="T down")
-# plt.plot(list_wavelength, R_up_NR, "r", label="R up NR")
-# plt.plot(list_wavelength, R_down_NR, "b", label="R down NR")
-# #plt.plot(list_wavelength, T_up_NR, "xg", label="T up NR")
-# #plt.plot(list_wavelength, T_down_NR, "xk", label="T down NR")
+# plt.figure(1)
+# plt.plot(list_L, R) #, "xb", label="avec fonction" )
 # plt.legend()
-# #plt.xlabel("Wavelength (nm) ")
-# plt.ylabel("Module of reflectance")
-# plt.title("Wavelength dependance")
+# plt.xlabel("Width of the nanocube")
+# plt.ylabel("R")
+# plt.title("Reflectance of the resonator")
 # plt.show(block=False)
-# #plt.savefig("reflectance_dependanceWavelength_ref_dessus_dessous_module.jpg")
+# plt.savefig("reflectance_dependanceWidthReso_lam700_versionSeminar.pdf")
 
 
-# plt.subplot(212)
-# plt.plot(list_wavelength, phase_R_up_NR, "r", label="phase R up NR")
-# plt.plot(list_wavelength, phase_R_down_NR, "b", label="phase R down NR")
-# plt.legend()
-# plt.xlabel("Wavelength (nm) ")
-# plt.ylabel("Phase of reflectance")
-# plt.title("Wavelength dependance")
-# plt.show(block=False)
-# plt.savefig("reflectance_dependanceWavelength_ref_dessus_dessous_phase_module.jpg")
+## Pour étudier la dépendance en longueur d'onde du coefficient de réflexion / tranmission selon si on éclaire par dessus / par dessous
+
+
+list_wavelength = np.linspace(500, 1200, 100)
+#R_up = np.empty(list_wavelength.size)
+#R_down = np.empty(list_wavelength.size)
+#T_up = np.empty(list_wavelength.size)
+#T_down = np.empty(list_wavelength.size)
+R_up_NR = np.empty(list_wavelength.size)
+R_down_NR = np.empty(list_wavelength.size)
+T_up_NR = np.empty(list_wavelength.size)
+T_down_NR = np.empty(list_wavelength.size)
+phase_R_up_NR = np.empty(list_wavelength.size)
+phase_R_down_NR = np.empty(list_wavelength.size)
+idx = 0
+
+for wavelength in list_wavelength:
+    perm_Ag = epsAgbb(wavelength) # argent
+    perm_Au = epsAubb(wavelength)
+    R_up_NR[idx], T_up_NR[idx], R_down_NR[idx], T_down_NR[idx], phase_R_down_NR[idx], phase_R_up_NR[idx] = reflectance(thick_super, width_reso, thick_gap, thick_reso, thick_gold, period, width_fiber, thick_sub, wavelength, angle, polarization, perm_dielec, perm_Glass, perm_Ag, perm_Au, n_mod)
+    #R_up[idx], T_up[idx], R_down[idx], T_down[idx] = reflectance(thick_super, 0, thick_gap, 0, thick_gold, period, width_fiber, thick_sub, wavelength, angle, polarization, perm_dielec, perm_Glass, perm_Ag, perm_Au, n_mod)
+    idx += 1
+
+plt.figure(8)
+plt.subplot(211)
+#plt.plot(list_wavelength, R_up, "r", label="R up")
+#plt.plot(list_wavelength, R_down, "b", label="R down")
+#plt.plot(list_wavelength, T_up, "g", label="T up")
+#plt.plot(list_wavelength, T_down, "k", label="T down")
+plt.plot(list_wavelength, R_up_NR, "r", label="R up NR")
+plt.plot(list_wavelength, R_down_NR, "b", label="R down NR")
+#plt.plot(list_wavelength, T_up_NR, "xg", label="T up NR")
+#plt.plot(list_wavelength, T_down_NR, "xk", label="T down NR")
+plt.legend()
+#plt.xlabel("Wavelength (nm) ")
+plt.ylabel("Module of reflectance")
+plt.title("Wavelength dependance")
+plt.show(block=False)
+#plt.savefig("reflectance_dependanceWavelength_ref_dessus_dessous_module.jpg")
+
+
+plt.subplot(212)
+plt.plot(list_wavelength, phase_R_up_NR, "r", label="phase R up NR")
+plt.plot(list_wavelength, phase_R_down_NR, "b", label="phase R down NR")
+plt.legend()
+plt.xlabel("Wavelength (nm) ")
+plt.ylabel("Phase of reflectance")
+plt.title("Wavelength dependance")
+plt.show(block=False)
+plt.savefig("comp_shift/reflectance_dependanceWavelength_ref_dessus_dessous_phase_module.jpg")

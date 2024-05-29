@@ -259,7 +259,7 @@ def reflectance(geometry, wave, materials, n_mod):
     angle = wave["angle"] 
     polarization = wave["polarization"]
 
-    #perm_env = materials["perm_env"]
+    perm_env = materials["perm_env"]
     perm_dielec = materials["perm_dielec"]
     perm_Glass = materials["perm_Glass"]
     perm_Ag = materials["perm_Ag"]
@@ -273,11 +273,11 @@ def reflectance(geometry, wave, materials, n_mod):
     k0 = 2 * np.pi / wavelength
     a0 = k0 * np.sin(angle * np.pi / 180)
 
-    Pup, Vup = homogene(k0, a0,polarization, perm_dielec, n)
+    Pup, Vup = homogene(k0, a0,polarization, perm_env, n)
     S = np.block([[np.zeros([n, n]), np.eye(n, dtype=np.complex128)], [np.eye(n), np.zeros([n, n])]])
 
     #if thick_mol < (thick_gap - thick_func):
-    P1, V1 = grating(k0, a0, polarization, perm_dielec, perm_Ag, n, pos_reso)
+    P1, V1 = grating(k0, a0, polarization, perm_env, perm_Ag, n, pos_reso)
     S = cascade(S, interface(Pup, P1))
     S = c_bas(S, V1, thick_reso)
     
@@ -294,7 +294,7 @@ def reflectance(geometry, wave, materials, n_mod):
     S = c_bas(S, V4, thick_sub)
 
     # reflexion quand on eclaire par le dessus
-    #Rup = abs(S[n_mod, n_mod]) ** 2 # correspond à ce qui se passe au niveau du SP layer up
+    Rup = abs(S[n_mod, n_mod]) ** 2 # correspond à ce qui se passe au niveau du SP layer up
     # transmission quand on éclaire par le dessus
     #Tup = abs(S[n + n_mod, n_mod]) ** 2 * np.real(V4[n_mod]) / (k0 * np.cos(angle)) / perm_Glass * perm_env
     # reflexion quand on éclaire par le dessous
@@ -308,7 +308,7 @@ def reflectance(geometry, wave, materials, n_mod):
     #phase_R_down = np.angle(S[n + n_mod, n + n_mod])
     #phase_T_up = np.angle(S[n + n_mod, n_mod])
     #phase_T_down = np.angle(S[n_mod, n + n_mod])
-    return Rdown#, Rup, Tdown, Tup#, Rup #phase_R_down#, Rup, phase_R_up#, Tdown, phase_T_down, Tup, phase_T_up
+    return Rup #Rdown, Rup#, Tdown, Tup#, Rup #phase_R_down#, Rup, phase_R_up#, Tdown, phase_T_down, Tup, phase_T_up
 
 ### Swag-structure
 thick_super = 200
@@ -328,64 +328,90 @@ angle = 0
 polarization = 1
 
 ## Paramètres des matériaux
-#perm_env = 1 ** 2
-perm_dielec = 1.45 ** 2 # spacer
+perm_env = 1.0 ** 2
+perm_dielec = 1.41 ** 2 # spacer
 perm_Glass = 1.5 ** 2 # substrat
 #perm_Ag = epsAgbb(wavelength) # argent
 #perm_Au = epsAubb(wavelength) # or
 #perm_Cr = epsCrbb(wavelength)
 
-n_mod = 200 
+n_mod = 150 
 n_mod_total = 2 * n_mod + 1
 
-## Etude de la dépendance de la réflexion à la longueur d'onde, influence de l'épaisseur d'or
-thick_gold10 = 10
-thick_gold50 = 50
-width_reso30 = 30
-#width_reso35 = 35
-thick_reso30 = 30
-#thick_reso35 = 35
-period300 = 300
-period500 = 500
+# ### Comparaison avec Cargent_Hdielec_Hgold_Hverre (valeurs attendues)
+# width_reso = 70
+# thick_reso = 70
+# thick_gap = 3
+# thick_gold = 10
+# period = 500.2153
 
-list_wavelength = np.linspace(600, 1000, 200)
-R_gold10_reso30_period300 = np.empty(list_wavelength.size)
-R_gold50_reso30_period300 = np.empty(list_wavelength.size)
-#R_gold10_reso35 = np.empty(list_wavelength.size)
-#R_gold50_reso35 = np.empty(list_wavelength.size)
-R_gold10_reso30_period500 = np.empty(list_wavelength.size)
-R_gold50_reso30_period500 = np.empty(list_wavelength.size)
+# list_wavelength = np.linspace(500, 1200, 100)
 
-idx = 0
+# Rd = np.empty(list_wavelength.size)
+# Ru = np.empty(list_wavelength.size)
 
-geometry_gold10_reso30_period300 = {"thick_super": thick_super, "width_reso": width_reso30, "thick_reso": thick_reso30, "thick_gap": thick_gap, "thick_gold": thick_gold10, "thick_sub": thick_sub, "period": period300}
-geometry_gold50_reso30_period300 = {"thick_super": thick_super, "width_reso": width_reso30, "thick_reso": thick_reso30, "thick_gap": thick_gap,"thick_gold": thick_gold50, "thick_sub": thick_sub,"period": period300}
-geometry_gold10_reso30_period500 = {"thick_super": thick_super, "width_reso": width_reso30, "thick_reso": thick_reso30, "thick_gap": thick_gap, "thick_gold": thick_gold10, "thick_sub": thick_sub, "period": period500}
-geometry_gold50_reso30_period500 = {"thick_super": thick_super, "width_reso": width_reso30, "thick_reso": thick_reso30, "thick_gap": thick_gap,"thick_gold": thick_gold50, "thick_sub": thick_sub,"period": period500}
+# idx = 0
 
-for wavelength in list_wavelength:
-    perm_Ag = epsAgbb(wavelength) # argent
-    perm_Au = epsAubb(wavelength)
-    #perm_Cr = epsCrbb(wavelength)
-    materials = {"perm_dielec": perm_dielec, "perm_Glass": perm_Glass, "perm_Ag": perm_Ag, "perm_Au": perm_Au}
-    wave = {"wavelength": wavelength, "angle": angle, "polarization": polarization}
-    R_gold10_reso30_period300[idx] = reflectance(geometry_gold10_reso30_period300, wave, materials, n_mod)
-    R_gold50_reso30_period300[idx] = reflectance(geometry_gold50_reso30_period300, wave, materials, n_mod)
-    R_gold10_reso30_period500[idx] = reflectance(geometry_gold10_reso30_period500, wave, materials, n_mod)
-    R_gold50_reso30_period500[idx] = reflectance(geometry_gold50_reso30_period500, wave, materials, n_mod)
-    idx += 1
+# geometry = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_gold": thick_gold, "thick_sub": thick_sub, "period": period}
+
+# for wavelength in list_wavelength:
+#     perm_Ag = epsAgbb(wavelength) # argent
+#     perm_Au = epsAubb(wavelength)
+#     #perm_Cr = epsCrbb(wavelength)
+#     materials = {"perm_env": perm_env, "perm_dielec": perm_dielec, "perm_Glass": perm_Glass, "perm_Ag": perm_Ag, "perm_Au": perm_Au}
+#     wave = {"wavelength": wavelength, "angle": angle, "polarization": polarization}
+#     Rd[idx], Ru[idx] = reflectance(geometry, wave, materials, n_mod)
+#     idx += 1
+
+# plt.figure(1)
+# plt.plot(list_wavelength, Rd, "r", label = "Rd")
+# plt.plot(list_wavelength, Ru, "b", label = "Rup")
+# plt.legend()
+# plt.ylabel("Reflectance")
+# plt.title("Normal situation ?")
+# plt.xlabel("Wavelength (nm)")
+
+# plt.show(block=False)
+# plt.savefig("comp_init/RdRu_cube70.pdf")
+# plt.savefig("comp_init/RdRu_cube70.jpg")
+
+# ## Etude de la dépendance de la réflexion à la longueur d'onde, influence de l'épaisseur d'or
+width_reso = 30
+thick_reso = 30
+thick_gold = 10
+#thick_gold20 = 20
+
+list_period = np.arange(100,200,10)
+list_wavelength = np.linspace(500, 1800, 200)
+
+Ru = np.empty((list_period.size, list_wavelength.size))
+
+idx_period = 0
+
+for period in list_period:
+    geometry = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_gold": thick_gold, "thick_sub": thick_sub, "period": period}
+
+    idx_wav = 0
+
+    for wavelength in list_wavelength:
+        perm_Ag = epsAgbb(wavelength) # argent
+        perm_Au = epsAubb(wavelength)
+        #perm_Cr = epsCrbb(wavelength)
+        materials = {"perm_env": perm_env, "perm_dielec": perm_dielec, "perm_Glass": perm_Glass, "perm_Ag": perm_Ag, "perm_Au": perm_Au}
+        wave = {"wavelength": wavelength, "angle": angle, "polarization": polarization}
+        Ru[idx_period, idx_wav] = reflectance(geometry, wave, materials, n_mod)
+        idx_wav += 1
+
+    idx_period += 1
 
 plt.figure(1)
-plt.plot(list_wavelength, R_gold10_reso30_period300, "r", label = "Au 10 nm")
-plt.plot(list_wavelength, R_gold10_reso30_period500, "--r")
-plt.plot(list_wavelength, R_gold50_reso30_period300, "b", label = "Au 50 nm")
-plt.plot(list_wavelength, R_gold50_reso30_period500, "--b")
+for idx_period in np.arange(list_period.size):
+    plt.plot(list_wavelength, Ru[idx_period], label = f"Period {list_period[idx_period]} nm")
 
+plt.xlabel('Wavelength (nm)')
+plt.ylabel('R up')
+plt.title("Period effect on R up resonance")
 plt.legend()
-plt.ylabel("Reflectance")
-plt.title(" 300 nm (lines) or 500 nm (dotted) period")
-plt.xlabel("Wavelength (nm)")
 
-plt.show(block=False)
-plt.savefig("R_gold_cube_period.pdf")
-plt.savefig("R_gold_cube_period.jpg")
+plt.show(block=False)    
+plt.savefig("period_effect/Ru_gold10_cube30_gap3_test_legend.jpg")
