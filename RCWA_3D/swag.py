@@ -32,20 +32,21 @@ hspacer = 3.0
 hlayer = 10.0
 l_cubex = 30.0
 l_cubey = 30.0
-space_x = 201-l_cubex
-space_y = 202-l_cubey
-eps_dielec = 1. **2
+space_x = 101-l_cubex
+space_y = 102-l_cubey
+eps_env = 1.0 **2
+eps_dielec = 1.41 **2
 eps_glass = 1.5 **2
 # fin_pml = 500.01
 # deb_cube = 100.01
 
 # nb_lamb = 75
-lambdas = np.linspace(400,1000,100)
+lambdas = np.linspace(400,1800,200)
 #lambdas = np.concatenate((np.arange(7000,9000,400),np.arange(9000,11000,50), np.arange(11000,13000,400)))
 r = np.zeros(len(lambdas), dtype=complex)
 theta = 0.0 * np.pi/180. #latitude (z)
 phi = 0.0 * np.pi/180. # précession (xy)
-pol = 90*np.pi/180. # 0 ou 90 pour fixer la pola
+pol = 90*np.pi/180. # 0 (TE?) ou 90 (TM?) pour fixer la pola
 
 pi = np.pi
 
@@ -57,15 +58,14 @@ top.oy = [0,l_cubey,l_cubey+space_y]
 top.ny = [0,l_cubey,l_cubey+space_y]
 top.Mm=Mm
 top.Nm=Nm
-top.mu =  np.array([[1.,1],
+top.mu =  np.array([[1.,1.],
                   [1.,1.]])
-top.eps =  np.array([[1.,1],
+top.eps =  np.array([[1.,1.],
                   [1.,1.]])
 
 top.eta=eta
 top.pmlx=[0, 0]
 top.pmly=[0, 0]
-top.pol = 0.0
 
 bot = bunch.Bunch()
 
@@ -164,8 +164,8 @@ for i, lambd in enumerate(lambdas):
     gp.b0 = b
     ml.b0 = b 
 
-    gp.eps =  np.array([[e_ag,1],
-                         [1,1]])
+    gp.eps =  np.array([[e_ag,1.],
+                         [1.,1.]])
     ml.eps = np.array([[e_au,e_au],
                        [e_au,e_au]])
     
@@ -181,7 +181,7 @@ for i, lambd in enumerate(lambdas):
     # print(lambd, Pair, Vair)
     [Pgp,Vgp] = base.reseau(gp)
     #print("Pgp")
-    [Psub,Vsub] = base.homogene(bot)
+    [Psub,Vsub], ext2 = base.homogene(bot, ext=1)
     #print("Psub")
     [Pspa,Vspa] = base.homogene(spa)
     #print("Pspa")
@@ -197,6 +197,7 @@ for i, lambd in enumerate(lambdas):
     #print("middle layer", end=" ")
     S = base.cascade(S, base.c_bas(base.interface(Pspa, Pml), Vml, hlayer))
     S = base.cascade(S, base.c_bas(base.interface(Pml, Psub), Vsub, 0))
+    #S = base.c_haut(base.interface(Pml, Psub), Vsub, hlayer) # test Pauline
     #print("bottom layer", end=" ")
     # print(S)
 
@@ -233,15 +234,10 @@ for i, lambd in enumerate(lambdas):
 
 import matplotlib.pyplot as plt
 # nb_lamb = 2
+plt.figure(2)
 plt.plot(lambdas, np.abs(r))
 plt.xlabel("Wavelength")
 plt.ylabel("|r|")
 plt.ylim([-0.1,1.1])
-plt.savefig(f"Rup/comp_2D_test2.png")
-# plt.clf()
-# plt.plot(lambdas, np.angle(r))
-# plt.xlabel("Wavelength")
-# plt.ylabel("arg(r)")
-# plt.savefig(f"Test_Angle_reflexion_interp_mim_python_nblambd{nb_lamb}_nbmode{Nm*Mm}_eta_{eta}.png")
-
-#%%
+plt.savefig(f"Cube30gold10gap3_lam200.png")
+plt.show(block=False)
