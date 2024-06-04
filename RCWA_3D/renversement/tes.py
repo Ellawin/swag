@@ -64,7 +64,7 @@ eta = 0.99 # stretching
 ### Wave
 theta = 0.0 * np.pi/180. #latitude (z)
 phi = 0.0 * np.pi/180. # précession (xy)
-pol = 0*np.pi/180. # 0 (TE) ou 90 (TM) pour fixer la pola 
+#pol = 0*np.pi/180. # 0 (TE) ou 90 (TM) pour fixer la pola 
 
 eps_env = 1.0 **2
 # fin_pml = 500.01
