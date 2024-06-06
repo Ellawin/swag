@@ -27,11 +27,11 @@ Nm = 10
 eta = 0.999 # stretching
 
 
-hcube = 30.0
+hcube = 50.0
 hspacer = 3.0
 hlayer = 10.0
-l_cubex = 30.0
-l_cubey = 30.0
+l_cubex = 50.0
+l_cubey = 50.0
 space_x = 101-l_cubex
 space_y = 102-l_cubey
 eps_env = 1.0 **2
@@ -235,9 +235,10 @@ for i, lambd in enumerate(lambdas):
 import matplotlib.pyplot as plt
 # nb_lamb = 2
 plt.figure(1)
-plt.plot(lambdas, np.abs(r))
-plt.xlabel("Wavelength")
-plt.ylabel("|r|")
-plt.ylim([-0.1,1.1])
-plt.savefig(f"Cube30gold10gap3_lam200_verif.png")
+plt.plot(lambdas, np.abs(r)**2, label = 'Cube 50 nm')
+plt.xlabel("Wavelength (nm)")
+plt.ylabel("R")
+plt.legend()
+plt.ylim([1,1])
+plt.savefig("Cube30_cube50_gold10_gap3_lam200.png")
 plt.show(block=False)
