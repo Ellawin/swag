@@ -23,7 +23,7 @@ np.set_printoptions(threshold=sys.maxsize,linewidth=110)# DEBUGGING
 
 #%%
 Mm = 10
-Nm = 10
+Nm = 0
 eta = 0.999 # stretching
 
 
@@ -233,11 +233,12 @@ for i, lambd in enumerate(lambdas):
 #     # print(np.real(Vair[b])/gp.k0)
 
 import matplotlib.pyplot as plt
-# nb_lamb = 2
-plt.figure(1)
+plt.figure(2)
 plt.plot(lambdas, np.abs(r))
 plt.xlabel("Wavelength")
 plt.ylabel("|r|")
 plt.ylim([-0.1,1.1])
-plt.savefig(f"Cube30gold10gap3_lam200_verif.png")
+plt.savefig("Cube30gold10gap3_lam200_Nm0.png")
 plt.show(block=False)
+
+np.savez("Cube30gold10gap3_lam200_Nm0.npz", lambdas=lambdas, r = r)
