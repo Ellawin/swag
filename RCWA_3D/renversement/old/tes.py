@@ -1,4 +1,4 @@
-from . import RCWA_3D_python
+from .. import RCWA_3D_python
 #.base as base
 import RCWA_3D_python.materials as mat
 import RCWA_3D_python.bunch as bunch

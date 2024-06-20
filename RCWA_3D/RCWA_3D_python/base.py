@@ -589,20 +589,20 @@ def homogene(s, ext=0):
 
 def efficace(a,ext,E):
     nb_mod = int(np.real(ext[0, 0]))
-    res = ext[:4, :nb_mod]
-    tmp = a.eps[0, 0] * a.mu[0, 0] * a.k0**2
+    res = np.copy(ext[:4, :nb_mod])
+    k2 = a.eps[0, 0] * a.mu[0, 0] * a.k0**2
 
     for i in range(nb_mod):
-       alpha = a.a0 + 2*np.pi*ext[1, i] / a.nx[-1]
+       kxn = a.a0 + 2*np.pi*ext[1, i] / a.nx[-1]
 
-       beta = a.b0 + 2*np.pi*ext[2, i] / a.ny[-1]
+       kyn = a.b0 + 2*np.pi*ext[2, i] / a.ny[-1]
 
        ind1 = int(np.real(ext[3, i]))
        ind2 = int(np.real(ext[3, i+nb_mod]))
 
-       A = (tmp-beta**2) * np.abs(E[ind1])**2
-       B = (tmp-alpha**2) * np.abs(E[ind2])**2
-       C = 2*alpha*beta * np.real(E[ind1]*np.conj(E[ind2]))
+       A = (k2-kyn**2) * np.abs(E[ind1])**2
+       B = (k2-kxn**2) * np.abs(E[ind2])**2
+       C = 2*kxn*kyn * np.real(E[ind1]*np.conj(E[ind2]))
        denom = a.mu[0, 0]*ext[0, i+nb_mod]
 
        res[3,i] = (A+B+C) / denom

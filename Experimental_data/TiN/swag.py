@@ -8,22 +8,22 @@ i = complex(0,1)
 
 ### Materials
 
+def alu(wave):
+    c = 
+    h = 2 * np.pi * 
+    lam = h * c / E
+
 def nk_TiN(lam):
     tableau3D = []
 
-    file = open('materials/TiN_nk.txt', "r")
+    file = open('materials/TiN_nk.txt', "r")    
     lines = file.readlines()
     file.close()
 
     nb_lines = len(lines)
-    for i in range (2,nb_lines):
-        values = lines[i].split("\t")
-        print("values = ", values)
-        values[2] = values[2].rstrip("\t")
-        print("v2 =", values[2])
-        values[3] = values[3].rstrip("\t")
-        print("v3 = ", values[3])
-        values = [float(val) for val in values]
+    for idx in range (2,nb_lines-2):
+        values = lines[idx].split("\t")
+        values = [float(val.replace(',','.')) for val in values]
         tableau3D.append(values)
     
     tableau3D = np.array(tableau3D)
@@ -33,9 +33,26 @@ def nk_TiN(lam):
     n_thermal = tableau3D[:,1]
     k_thermal = []
     k_thermal = tableau3D[:,2]
-    n = np.interp(lam, wl, n_thermal)
-    k = np.interp(lam, wl, k_thermal)
-    return(n, k)
+    n_nh3 = []
+    n_nh3 = tableau3D[:,4]
+    k_nh3 = []
+    k_nh3 = tableau3D[:,5]
+    n_n2 = []
+    n_n2 = tableau3D[:,7]
+    k_n2 = []
+    k_n2 = tableau3D[:,8]
+
+    n_thermal_int = np.interp(lam, wl, n_thermal)
+    k_thermal_int = np.interp(lam, wl, k_thermal)
+    n_nh3_int = np.interp(lam, wl, n_nh3)
+    k_nh3_int = np.interp(lam, wl, k_nh3)
+    n_n2_int = np.interp(lam, wl, n_n2)
+    k_n2_int = np.interp(lam, wl, k_n2)
+
+    ri_thermal = n_thermal_int + i*k_thermal_int
+    ri_nh3 = n_nh3_int + i*k_nh3_int
+    ri_n2 = n_n2_int + i*k_n2_int
+    return(ri_thermal, ri_nh3, ri_n2)
 
 def ri_Al2O3(lam):
     tableau3D = []
@@ -595,164 +612,40 @@ perm_PVP = 1.53 ** 2
 
 n_mod = 75 
 
-### Contour plot de la reflectance en fonction de la longueur d'onde (ordonnée) et de la taille du résonateur (abscisse)
-# list_wavelength = np.linspace(400, 900, 100)
-# list_nanocube_size = np.linspace(45,60,30)
+# ### Etude des indices TiN
+list_wavelength = np.linspace(400, 1000, 1000)
 
-# Rbrut = np.empty((list_wavelength.size, list_nanocube_size.size))
-# Rgold = np.empty((list_wavelength.size, list_nanocube_size.size))
-# Rnorm = np.empty((list_wavelength.size, list_nanocube_size.size))
-
-# idx_wav = 0
-# for wavelength in list_wavelength:
-#     perm_Al2O3 = ri_Al2O3(wavelength) ** 2
-#     perm_Ag = epsAgbb(wavelength)
-#     perm_Au = epsAubb(wavelength)
-#     idx_reso = 0
-#     for thick_reso in list_nanocube_size:
-#         width_reso = thick_reso 
-#         width_PVP = width_reso + 8
-#         Rbrut[idx_wav, idx_reso] = reflectance(thick_up, thick_down, thick_gap, thick_reso, thick_gold, thick_PVP, width_reso, width_PVP, period, wavelength, angle, polarization, perm_PVP, perm_Al2O3, perm_Ag, perm_Au, perm_Glass, n_mod)
-#         Rgold[idx_wav, idx_reso] = reflectance(thick_up, thick_down, thick_gap, 0, thick_gold, 0, 0, 0, period, wavelength, angle, polarization, perm_PVP, perm_Al2O3, perm_Ag, perm_Au, perm_Glass, n_mod)
-#         idx_reso += 1
-#     idx_wav += 1
-
-# Rnorm = Rbrut / Rgold
-
-# plt.figure(5)
-# plt.contourf(list_nanocube_size, list_wavelength, Rnorm)
-# plt.show(block=False)
-
-# plt.figure(6)
-# plt.imshow(Rnorm, cmap = 'jet', aspect = 'auto')
-# plt.show(block=False)
-
-### Etude des indices TiN
-list_wavelength = np.linspace(400, 1300, 1000)
-
-ri_al = np.empty(list_wavelength.size)
-ri_ti = np.empty(list_wavelength.size)
-n_tin = np.empty(list_wavelength.size)
-k_tin = np.empty(list_wavelength.size)
-
-idx = 0
+ri_thermal = np.empty(list_wavelength.size, dtype = complex)
+ri_nh3 = np.empty(list_wavelength.size, dtype = complex)
+ri_n2 = np.empty(list_wavelength.size, dtype = complex)
 
 for idx, wavelength in enumerate(list_wavelength):
-    ri_al[idx] = ri_Al2O3(wavelength)
-    ri_ti[idx] = ri_TiO2(wavelength)
-    n_tin[idx], k_tin[idx] = nk_TiN(wavelength)
+    #ri_al[idx] = ri_Al2O3(wavelength)
+    #ri_ti[idx] = ri_TiO2(wavelength)
+    ri_thermal[idx], ri_nh3[idx], ri_n2[idx] = nk_TiN(wavelength)
 
+plt.figure(1)
+plt.plot(list_wavelength, np.real(ri_thermal), "r", label = "Thermal")
+plt.plot(list_wavelength, np.real(ri_nh3), "b", label = "NH3")
+plt.plot(list_wavelength, np.real(ri_n2), "g", label = "N2")
 
-plt.figure(10)
-#plt.subplot(121)
-plt.plot(list_wavelength, ri_ti, "r", label = "TiO2")
-plt.ylabel("TiO2")
-#plt.xlabel("Wavelength (nm)")
-#plt.legend()
-#plt.title("TiO2")
-#plt.show(block=False)
-#plt.savefig("refractive_index_TiO2.jpg")
-
-plt.plot(list_wavelength, n_tin, "g", label = 'TiN')
-
-#plt.subplot(122)
-plt.plot(list_wavelength, ri_al, "b", label = "Al2O3")
-#plt.plot(list_wavelength, ri_ti, "r", label = "TiO2")
-plt.ylabel("R.I.")
+# plt.figure(10)
+# plt.plot(list_wavelength, ri_ti, "r", label = "TiO2")
+# plt.ylabel("TiO2")
 plt.xlabel("Wavelength (nm)")
 plt.legend()
-plt.title("Refractive Index")
+# #plt.title("TiO2")
 plt.show(block=False)
-plt.savefig("refractive_index_Al2O3_TiO2_TiN.jpg")
+# #plt.savefig("refractive_index_TiO2.jpg")
 
+# plt.plot(list_wavelength, n_tin, "g", label = 'TiN')
 
-### reflectance en fonction de la longueur d'onde (image 1d)
-# list_wavelength = np.linspace(400, 900, 1300-400)
-
-# R_al = np.empty(list_wavelength.size)
-# R_al_without_PVP = np.empty(list_wavelength.size)
-# R_al_theta65 = np.empty(list_wavelength.size)
-# R_al_Nc60 = np.empty(list_wavelength.size)
-# R_al500 = np.empty(list_wavelength.size)
-
-# # #R_ti = np.empty(list_wavelength.size)
-# R_gold1500 = np.empty(list_wavelength.size)
-# R_gold500 = np.empty(list_wavelength.size)
-
-# idx = 0
-
-# for wavelength in list_wavelength:
-#     perm_Ag = epsAgbb(wavelength)
-#     perm_Au = epsAubb(wavelength)
-#     perm_Al2O3 = ri_Al2O3(wavelength) ** 2
-# #     perm_TiO2 = ri_TiO2(wavelength) ** 2
-#     R_al[idx] = reflectance(thick_up, thick_down, thick_gap, thick_reso, thick_gold, thick_PVP, width_reso, width_PVP, period, wavelength, angle, polarization, perm_PVP, perm_Al2O3, perm_Ag, perm_Au, perm_Glass, n_mod)
-# #     #R_ti[idx] = reflectance(thick_up, thick_down, thick_gap, thick_reso, thick_gold, thick_PVP, width_reso, width_PVP, period, wavelength, angle, polarization, perm_PVP, perm_TiO2, perm_Ag, perm_Au, perm_Glass, n_mod)
-#     R_gold500[idx] = reflectance(thick_up, thick_down, thick_gap, 0, thick_gold, 0, 0, 0, 500, wavelength, angle, polarization, perm_PVP, perm_Al2O3, perm_Ag, perm_Au, perm_Glass, n_mod)    
-#     R_gold1500[idx] = reflectance(thick_up, thick_down, thick_gap, 0, thick_gold, 0, 0, 0, 1500, wavelength, angle, polarization, perm_PVP, perm_Al2O3, perm_Ag, perm_Au, perm_Glass, n_mod)    
-#     R_al500[idx] = reflectance(thick_up, thick_down, thick_gap, thick_reso, thick_gold, thick_PVP, width_reso, width_PVP, 500, wavelength, angle, polarization, perm_PVP, perm_Al2O3, perm_Ag, perm_Au, perm_Glass, n_mod)
-#     R_al_without_PVP[idx] = reflectance(thick_up, thick_down, thick_gap, thick_reso, thick_gold, 0, width_reso, 0, period, wavelength, angle, polarization, perm_PVP, perm_Al2O3, perm_Ag, perm_Au, perm_Glass, n_mod)    
-#     R_al_theta65[idx] = reflectance(thick_up, thick_down, thick_gap, thick_reso, thick_gold, thick_PVP, width_reso, width_PVP, period, wavelength, 65, polarization, perm_PVP, perm_Al2O3, perm_Ag, perm_Au, perm_Glass, n_mod)
-#     R_al_Nc60[idx] = reflectance(thick_up, thick_down, thick_gap, 60, thick_gold, 60+8, 60, 4, period, wavelength, angle, polarization, perm_PVP, perm_Al2O3, perm_Ag, perm_Au, perm_Glass, n_mod)
-#     idx += 1
-
-# plt.figure(1)
-# plt.plot(list_wavelength, R_al / R_gold1500, "b", label = "Resonator size 50 nm")
-# plt.plot(list_wavelength, R_al_Nc60 / R_gold1500, "r", label = "Resonator size 60 nm")
-# plt.legend()
-# plt.ylabel("Reflectance")
-# plt.xlabel("Wavelength")
-# plt.title("Reflectance of the single resonator")
-# plt.show(block=False)
-# plt.savefig("reflectance_single_resonator_resoSize_comp")
-
-# plt.figure(2)
-# plt.plot(list_wavelength, R_al / R_gold1500, "b", label = "With PVP")
-# plt.plot(list_wavelength, R_al_without_PVP / R_gold1500, "r", label = "Without PVP")
-# plt.legend()
-# plt.ylabel("Reflectance")
-# plt.xlabel("Wavelength")
-# plt.title("Reflectance of the single resonator")
-# plt.show(block=False)
-# plt.savefig("reflectance_single_resonator_PVP_comp")
-
-# plt.figure(3)
-# plt.plot(list_wavelength, R_al / R_gold1500, "b", label = "Period 1500 nm")
-# plt.plot(list_wavelength, R_al500 / R_gold500, "r", label = "Period 500 nm")
-# plt.legend()
-# plt.ylabel("Reflectance")
-# plt.xlabel("Wavelength")
-# plt.title("Reflectance of the single resonator")
-# plt.show(block=False)
-# plt.savefig("reflectance_single_resonator_period_comp")
-
-# plt.figure(4)
-# plt.plot(list_wavelength, R_al / R_gold1500, "b", label = "Normal incidence")
-# plt.plot(list_wavelength, R_al_theta65 / R_gold1500, "r", label = "65° incidence")
-# plt.legend()
-# plt.ylabel("Reflectance")
-# plt.xlabel("Wavelength")
-# plt.title("Reflectance of the single resonator")
-# plt.show(block=False)
-# plt.savefig("reflectance_single_resonator_angle_comp")
-
-# plt.figure(3)
-# plt.subplot(211)
-# plt.plot(list_wavelength[0:500], R_al[0:500] / R_gold1500[0:500], "b", label = "Al2O3 gap")
-# plt.plot(list_wavelength[0:500], R_ti[0:500] / R_gold1500[0:500], "r", label = "TiO2 gap")
-# plt.ylabel("Module")
-# #plt.xlabel("Wavelength (nm)")
-# plt.legend()
-# plt.title("Reflectance of the single resonator")
-
-# plt.subplot(212)
-# plt.plot(list_wavelength[200:len(list_wavelength)], R_al[200:len(list_wavelength)] / R_gold1500[200:len(list_wavelength)], "b", label = "Al2O3 gap")
-# plt.plot(list_wavelength[200:len(list_wavelength)], R_ti[200:len(list_wavelength)] / R_gold1500[200:len(list_wavelength)], "r", label = "TiO2 gap")
-# plt.ylabel("Module")
+# #plt.subplot(122)
+# plt.plot(list_wavelength, ri_al, "b", label = "Al2O3")
+# #plt.plot(list_wavelength, ri_ti, "r", label = "TiO2")
+# plt.ylabel("R.I.")
 # plt.xlabel("Wavelength (nm)")
 # plt.legend()
-# #plt.title("Reflectance of the single resonator")
-
+# plt.title("Refractive Index")
 # plt.show(block=False)
-# plt.savefig("reflectance_single_resonator_dielec_2scales.jpg")
-
+plt.savefig("refractive_index_TiN_stop1000.jpg")
