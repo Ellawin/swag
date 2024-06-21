@@ -72,14 +72,9 @@ def couche(valp, h):
 
 
 def interface(P, Q):
-    """
-        Computation of the scattering matrix of an interface, P and Q being the
-        matrices given for each layer by homogene, reseau or creneau.
-        P[:n,   i] is the x component of the mode i
-        P[n:2:, i] is the y component of the mode i
-        The S matrix computed is simply the solution to the continuity relations over the
-        EM field at the interface
-    """
+    '''Computation of the scattering matrix of an interface, P and Q being the
+    matrices given for each layer by homogene, reseau or creneau.
+    '''
     n = int(P.shape[1])
     A = np.block([[P[0:n,0:n],-Q[0:n,0:n]],
                   [P[n:2*n,0:n], Q[n:2*n,0:n]]])
@@ -114,6 +109,7 @@ def eps11(s):
             for l in range(len(s.eps)):
                 tfy = tfd(s.oy[l], s.oy[l+1], s.ny[l], s.ny[l+1], s.eta, s.ny[-1], n)
                 v = v + T[j, k, l] * tfy * (1 + 1.0j * s.pmly[l]) # eps / f * g
+            v = v * (np.abs(v) > 1e-12 * np.max(np.abs(v)))
             M[j*n:(j+1)*n, k*n:(k+1)*n] = toep(v) # eps / f * g
 
     return M
@@ -142,6 +138,7 @@ def eps22(s):
             for l in range(len(s.eps)):
                 tfy = tfd(s.oy[l], s.oy[l+1], s.ny[l], s.ny[l+1], s.eta, s.ny[-1], n)
                 v = v + 1 / T[j, k, l] * tfy * (1 + 1.0j * s.pmly[l])  # 1 / (eps * f) * g
+            v = v * (np.abs(v) > 1e-12 * np.max(np.abs(v)))
             M[j*n:(j+1)*n, k*n:(k+1)*n] = np.linalg.inv(toep(v)) # eps * f / g
 
     return M
@@ -174,6 +171,7 @@ def eps33(s):
                 tfy = tfd(s.oy[l], s.oy[l+1], s.ny[l], s.ny[l+1], s.eta, s.ny[-1], n)
                 # print(f"DEBUG eps33 j={j} k={k} l={l} tfy={tfy}")
                 v = v + T[j, k, l] * tfy * (1 + 1.0j * s.pmly[l]) # eps * f * g
+            v = v * (np.abs(v) > 1e-12 * np.max(np.abs(v)))
             M[j*n:(j+1)*n, k*n:(k+1)*n] = toep(v) # eps * f * g
             # print(f"DEBUG eps33 j={j} k={k} \n M={M}\n (j-1)*n:j*n={(j-1)*n}:{j*n} (k-1)*n:k*n={(k-1)*n}:{k*n}")
     # print(f"DEBUG eps33 M={M}")
@@ -203,6 +201,7 @@ def mu11(s):
             for l in range(len(s.eps)):
                 tfy = tfd(s.oy[l], s.oy[l+1], s.ny[l], s.ny[l+1], s.eta, s.ny[-1], n)
                 v = v + T[j, k, l] * tfy * (1 + 1.0j * s.pmly[l]) # mu / f * g
+            v = v * (np.abs(v) > 1e-12 * np.max(np.abs(v)))
             M[j*n:(j+1)*n, k*n:(k+1)*n] = toep(v) # mu / f * g
 
     return M
@@ -233,6 +232,7 @@ def mu22(s):
             for l in range(len(s.eps)):
                 tfy = tfd(s.oy[l], s.oy[l+1], s.ny[l], s.ny[l+1], s.eta, s.ny[-1], n)
                 v = v + 1 / T[j, k, l] * tfy * (1 + 1.0j * s.pmly[l]) # 1  / (mu * f) * g
+            v = v * (np.abs(v) > 1e-12 * np.max(np.abs(v)))
             M[j*n:(j+1)*n, k*n:(k+1)*n] = np.linalg.inv(toep(v)) # mu * f / g
 
     return M
@@ -262,6 +262,7 @@ def mu33(s):
             for l in range(len(s.eps)):
                 tfy = tfd(s.oy[l], s.oy[l+1], s.ny[l], s.ny[l+1], s.eta, s.ny[-1], n)
                 v = v + T[j, k, l] * tfy * (1 + 1.0j * s.pmly[l]) # mu * f * g
+            v = v * (np.abs(v) > 1e-12 * np.max(np.abs(v)))
             M[j*n:(j+1)*n, k*n:(k+1)*n] = toep(v) # mu * f * g
 
     return M
@@ -308,7 +309,7 @@ def reseau(s):
         a = s.a0 + 2*np.pi*j / s.nx[-1]
         v_a.extend([a] * n)
     alpha = 1.0j*np.diag(v_a)
-    # print(f"DEBUG", alpha)
+    # print(f"DEBUG reseau v_a={v_a}")
 
     v_b = s.b0 + 2*np.pi * np.arange(-s.Nm, s.Nm+1) / s.ny[-1]
     # print(f"DEBUG reseau v_b={v_b}")
@@ -317,9 +318,8 @@ def reseau(s):
     beta = 1.0j*np.diag(v_b)
     # print("DEBUG", beta)
 
-    inv_e33 = np.linalg.inv(eps33(s))
-    # print(f"DEBUG reseau inv_e33={inv_e33}")
-    inv_e33 = inv_e33 / (1.0j*s.k0)
+    inv_e33 = np.linalg.inv(eps33(s)) / (1.0j*s.k0)
+    # print(f"DEBUG reseau inv_e33={inv_e33*1.0j*s.k0}")
     alpha_eps_beta = alpha @ inv_e33 @ beta 
     alpha_eps_alpha = alpha @ inv_e33 @ alpha
     beta_eps_beta = beta @ inv_e33 @ beta
@@ -343,11 +343,8 @@ def reseau(s):
     L = L * (np.abs(L)>1e-18)
     # print(f"DEBUG reseau L={L}")
     [V, inv_L] = np.linalg.eig(L)
-    # DEBUG: normalizing eigen vectors
-    # for i_vp in range(inv_L.shape[1]):
-    #     inv_L[:,i_vp] = inv_L[:,i_vp]/np.exp(1.0j*np.angle(inv_L[0,i_vp]))
-    # print("LHE", Lhe)
-    # print("L", L)
+    for i_vp in range(inv_L.shape[1]):
+        inv_L[:,i_vp] = inv_L[:,i_vp]/np.exp(1.0j*np.angle(inv_L[0,i_vp]))
     
     V = np.sqrt(-V)
     
@@ -357,8 +354,6 @@ def reseau(s):
     # V = np.real(V) + 1.0j*np.imag(V)*keep_im
     P = np.block([[inv_L],
                   [Lhe @ inv_L @ np.diag(1 / V)]])
-    
-    # print("P", P, "V", V)
 
     return (P, V)
 
@@ -382,7 +377,7 @@ def homogene(s, ext=0):
     """
     n = 2 * s.Nm + 1
     m = 2 * s.Mm + 1
-    global nb_mod # Why did I have to for this ??
+    global np # Why did I have to do this ??
     
     v_a = []
     for j in range(-s.Mm, s.Mm+1):
@@ -394,22 +389,21 @@ def homogene(s, ext=0):
     v_b = np.tile(v_b, (m))
     beta = 1.0j*np.diag(v_b)
 
-    # print("DEBUG homogene", eps33(s)[0:5,0:5])
     i_eps33 = np.linalg.inv(eps33(s))
     i_mu33 = np.linalg.inv(mu33(s))
     eps1 = eps11(s)
     eps2 = eps22(s)
     mu1 = mu11(s)
     mu2 = mu22(s)
-    # print(f"DEBUG homogene, n={n}, m={m}, v_b={v_b}")
-    # print(f"DEBUG homogene, shape(mu1)={np.shape(mu1)}, shape(mu2)={np.shape(mu2)},\
-    #       shape(eps1)={np.shape(eps1)}, shape(eps2)={np.shape(eps2)}, shape(alpha)={np.shape(alpha)}, shape(beta)={np.shape(beta)}")
+    print(f"DEBUG homogene, n={n}, m={m}, v_b={v_b}")
+    print(f"DEBUG homogene, shape(mu1)={np.shape(mu1)}, shape(mu2)={np.shape(mu2)},\
+          shape(eps1)={np.shape(eps1)}, shape(eps2)={np.shape(eps2)}, shape(alpha)={np.shape(alpha)}, shape(beta)={np.shape(beta)}")
     L = -s.k0**2 * mu2 @ eps1 - alpha @ i_eps33 @ alpha @ eps1 - mu2 @ beta @ i_mu33 @ beta
-    # print(f"DEBUG homogene, (mu1)={(mu1)}, (mu2)={(mu2)},\
-    #       (eps1)={(eps1)}, (eps2)={(eps2)}, (alpha)={(alpha)}, (beta)={(beta)},\
-    #         ieps33={i_eps33}, i_mu33={i_mu33} k0={s.k0}")
+    print(f"DEBUG homogene, (mu1)={(mu1)}, (mu2)={(mu2)},\
+          (eps1)={(eps1)}, (eps2)={(eps2)}, (alpha)={(alpha)}, (beta)={(beta)},\
+            ieps33={i_eps33}, i_mu33={i_mu33} k0={s.k0}")
     [B, A] = np.linalg.eig(L)
-    # print(f"DEBUG homogene A={A}, B={B}, L={L}")
+    print(f"DEBUG homogene A={A}, B={B}, L={L}")
 
     L = -s.k0**2 * mu1 @ eps2 - beta @ i_eps33 @ beta @ eps2 - mu1 @ alpha @ i_mu33 @ alpha
 
@@ -417,7 +411,7 @@ def homogene(s, ext=0):
 
     E = np.block([[A, np.zeros((n*m, n*m))],
                   [np.zeros((n*m, n*m)), C]])
-    # print(f"DEBUG homogene, E={E}")
+    print(f"DEBUG homogene, E={E}")
 
     inv_mu33 = i_mu33 / (1.0j*s.k0)
     alpha_mu_beta = alpha @ inv_mu33 @ beta
@@ -426,10 +420,9 @@ def homogene(s, ext=0):
     beta_mu_alpha = beta @ inv_mu33 @ alpha
     Lhe = np.block([[-alpha_mu_beta, -1.0j*s.k0*eps22(s) + alpha_mu_alpha],
                     [1.0j*s.k0*eps11(s)-beta_mu_beta, beta_mu_alpha]])
-    # print(f"Debug homogene Lhe={Lhe}")
 
     V = np.block([B, D])
-    # print(f"DEBUG homogene V={V}")
+    print(f"DEBUG homogene V={V}")
 
     # Ca dépend ! Soit c'est entre deux couches, soit c'est extérieur !
     if (ext):
@@ -437,21 +430,12 @@ def homogene(s, ext=0):
         # -> we are interested in the Rayleigh decomposition of the modes
 
         V = np.sqrt(-V)
-        neg_val = np.angle(V) < -np.pi/2 + 1e-5
-        V = V * (1 - 2*neg_val)
 
-
-        # print('exterieur')  
+        print('exterieur')  
 
         # Finding real eigen values and their positions in V
-        nb_real = np.sum(abs(np.angle(V))<1e-4)
-        ana_kz = np.zeros((4,nb_real), dtype=complex)
-        j=0
-        for i in range(len(V)):
-            if (abs(np.angle(V[i]))<1e-4):
-                ana_kz[3,j] = i
-                j += 1
-        p = j
+
+        position = np.where((abs(np.angle(V))<1e-4))[0]
 
         # Compute the analytical eigen values (Rayleigh decomposition)
 
@@ -459,154 +443,89 @@ def homogene(s, ext=0):
         kx = 2*np.pi/dx
         dy = s.ny[-1]
         ky = 2*np.pi/dy
-
-        k = np.sqrt(s.eps[0, 0]*s.mu[0, 0])*s.k0 # DEBUGG CHANGED [1,1] TO [0,0]
-
+        k = np.sqrt(s.eps[1, 1]*s.mu[1, 1])*s.k0
         min_ord_x = int((k + s.a0)/kx)
         max_ord_x = int((k - s.a0)/kx)
         min_ord_y = int((k + s.b0)/ky)
         max_ord_y = int((k - s.b0)/ky)
 
+        ana_kz = []
         # TODO: check is correct, changed max ord from dx to 1/kx
-        nb_ana = 0
-        for nx in range(-min_ord_x, max_ord_x+1):
-            for ny in range(-min_ord_y, max_ord_y+1):
-                gamma = np.sqrt(0j+k**2-(s.a0 + nx*kx)**2-(s.b0 + ny*ky)**2)
-                # Computes the (ny,nx) diffracted order
-                # print(nx, ny, gamma)
-                if (np.abs(np.imag(gamma)/np.real(gamma))<1e-4):
+        i = 0
+        for m in range(-min_ord_x, max_ord_x+1):
+            for n in range(-min_ord_y, max_ord_y+1):
+                gamma = np.sqrt(0j+k**2-(s.a0 + m*kx)**2-(s.b0 + n*ky)**2)
+                # Computes the (n,m) diffracted order
+                print(m, n, gamma)
+                if (np.real(gamma) != 0):
                     # Keeping only propagative modes
-                    ana_kz[0, nb_ana+1] = gamma
-                    ana_kz[1, nb_ana+1] = nx
-                    ana_kz[2, nb_ana+1] = ny
-                    nb_ana = nb_ana+1
-                    if ((ny == 0) and (nx == 0)):
-                        ana_kz[:3,0] = ana_kz[:3,nb_ana]
-                        nb_ana = nb_ana-1
-                    # print("ana_kz changed", nx, ny, ana_kz)
-        # ana_kz = np.array(ana_kz).T
-        nb_ana += 1
+                    if ((n == 0) and (m == 0)):
+                        ana_kz.insert(0,[gamma, m, n, 0])
+                        # Main propagative mode
+                    else:
+                        ana_kz.append([gamma, m, n, 0])
+                    i+=1
+        ana_kz = np.array(ana_kz).T
 
 
-        # if (np.shape(position)[1] == 2*np.shape(ana_kz)[1]):
-        #     ana_kz = np.block([ana_kz, ana_kz])
-        #     ana_kz[4, :] = position
-        # else:
-        if (2*nb_ana != p):
-            print('Missing modes! (homogene)')   
-        
-        # DEBUGG fortran code "on réplique"
-        ana_kz[:3,nb_ana:2*nb_ana] = ana_kz[:3,:nb_ana]
+        if (np.shape(position)[1] == 2*np.shape(ana_kz)[1]):
+            ana_kz = np.block([ana_kz, ana_kz])
+            ana_kz[4, :] = position
+        else:
+            print('Missing modes! (homogene)')    
 
-        for i_mod in range(2*nb_ana):
+        for m in range(np.shape(ana_kz)[1]):
             # If the mode is propagative, it is in ana_kz
             # and we replace it in V (more precise?)
-            # print("pop",V)
-            # print("popop", ana_kz[3, i_mod] ,ana_kz[:, i_mod])
-            V[int(ana_kz[3, i_mod])] = ana_kz[0, i_mod]
-            # print("repop",V)
+            V[ana_kz[3, m]] = ana_kz[1, m]
 
-        # print(f"DEBUG homogene V={V}")
-        ana_kz[0,0] = nb_ana # storing nb_mod of mdoes
+        print(f"DEBUG homogene V={V}")
 
         # Replacing modes
 
         n = 2 * s.Nm + 1
         m = 2 * s.Mm + 1
+        E = np.zeros((2*n*m, 2*n*m))
+        for j in range(np.shape(ana_kz)[1]/2):
 
-        k=n*m        
-        x=0.
-        for k in range(np.shape(s.eps)[1]):
-            x=x+tfd(s.ox[k],s.ox[k+1],s.nx[k],s.nx[k+1],s.eta,s.nx[-1],m)
-        tmp = toep(x)
-        
-
-        unite = np.eye(n)
-        alpha = np.zeros((n*m, n*m),dtype=complex)
-        for j in range(m):
-            for k in range(m):
-                alpha[j*n:(j+1)*n,k*n:(k+1)*n] = tmp[j,k]*unite
-        # print(alpha)
-        y=0.
-        for k in range(np.shape(s.eps)[0]):
-            y=y+tfd(s.oy[k],s.oy[k+1],s.ny[k],s.ny[k+1],s.eta,s.ny[-1],n)
-        tmp = toep(y)
-
-        beta = np.zeros((n*m, n*m),dtype=complex)
-        for j in range(m):
-                beta[j*n:(j+1)*n,j*n:(j+1)*n] = tmp
-        # print(beta)
-        for j in range(int(ana_kz[0,0])):
-
-            nb_mod = 2048
-            pos_x = np.arange(nb_mod)/nb_mod*dx
-            x = np.zeros(nb_mod, dtype=complex)
-            for k in range(nb_mod):
-                x[k] = np.exp(1.0j*(s.a0 + ana_kz[1, j]*kx)*f(s, pos_x[k])-1.0j*s.a0*pos_x[k])
-            x = np.fft.fft(x)/nb_mod
-            x = np.block([x[nb_mod-s.Mm:nb_mod], x[:s.Mm+1]])
+            np = 2048
+            pos_x = np.arange(np)/np*dx
+            x = np.array(np)
+            for k in range(np):
+                x[k] = np.exp(1.0j*(s.a0 + ana_kz[2, j]*kx)*f(s, pos_x[k])-1.0j*s.a0*pos_x[k])
+            x = dx*np.fft(x)/np
+            x = [x[np-s.Mm:np], x[:s.Mm+1]]
 
 
-            pos_y = np.arange(nb_mod)/nb_mod*dy
-            y = np.zeros(nb_mod, dtype=complex)
-            for k in range(nb_mod):
-                y[k] = np.exp(1.0j*(s.b0 + ana_kz[2, j]*ky)*g(s, pos_y[k])-1.0j*s.b0*pos_y[k])
-            y = np.fft.fft(y)/nb_mod
-            y = np.block([y[nb_mod-s.Nm:nb_mod], y[:s.Nm+1]])
+            pos_y = np.arange(np)/np*dy
+            y = np.array(np)
+            for k in range(np):
+                y[k] = np.exp(1.0j*(s.b0 + ana_kz[3, j]*ky)*g(s, pos_y[k])-1.0j*s.b0*pos_y[k])
+            y = dy*np.fft(y)/np
+            y = [y[np-s.Nm:np], y[:s.Nm+1]]
 
-            # print(x, y)
-
-            vtmp = np.zeros(m*n, dtype=complex)
+            vtmp = []
             for k in range(2 * s.Mm + 1):
-                l = k*n
-                vtmp[l:l+n] = x[k]*y
-            # vtmp = np.array([vtmp]).T
+                vtmp.append(x[k]*y)
+            vtmp = np.array(vtmp).T
 
-            # print(np.shape(E), np.shape(vtmp), n*m)
-            # print(j, "vtmp", vtmp)
-            # print("ALPHA", alpha@ vtmp, "BETA", beta@ vtmp)
-            # print("E Before", E)
-            E[:n*m, int(ana_kz[3, j])] = alpha @ vtmp
-            E[n*m:, int(ana_kz[3, j + np.shape(ana_kz)[1]//2])] = beta @ vtmp
-            # print("E")
-            # print(E[:n*m, int(ana_kz[3, j])])
-            # print(E[n*m:, int(ana_kz[3, j + np.shape(ana_kz)[1]//2])])
-        P = np.block([[E],
-                    [Lhe @ E @ np.diag(1 / V)]])
-        return (P, V), ana_kz
 
+            E[:, ana_kz[3, j]] = np.block([[vtmp],
+                                           [np.zeros((n*m, 1))]])
+            E[:, ana_kz[3, j + np.shape(ana_kz)[1]//2]] = np.block([[np.zeros((n*m, 1))],
+                                                                    [vtmp]])
+
+
+        imag_val = np.angle(V)<-np.pi/2+0.00001
+        V = (1-2*imag_val) * V
     else:
         # Not in a substrate/superstrate, we simply keep the modes
         V = np.sqrt(-V)
-        neg_val = np.imag(V) < 0
-        V = V * (1 - 2*neg_val)
         ana_kz = []
-    # print ("LHE", Lhe)
+
     P = np.block([[E],
                   [Lhe @ E @ np.diag(1 / V)]])
-    return (P, V)
-
-
-def efficace(a,ext,E):
-    nb_mod = int(np.real(ext[0, 0]))
-    res = np.copy(ext[:4, :nb_mod])
-    tmp = a.eps[0, 0] * a.mu[0, 0] * a.k0**2
-
-    for i in range(nb_mod):
-       alpha = a.a0 + 2*np.pi*ext[1, i] / a.nx[-1]
-
-       beta = a.b0 + 2*np.pi*ext[2, i] / a.ny[-1]
-
-       ind1 = int(np.real(ext[3, i]))
-       ind2 = int(np.real(ext[3, i+nb_mod]))
-
-       A = (tmp-beta**2) * np.abs(E[ind1])**2
-       B = (tmp-alpha**2) * np.abs(E[ind2])**2
-       C = 2*alpha*beta * np.real(E[ind1]*np.conj(E[ind2]))
-       denom = a.mu[0, 0]*ext[0, i+nb_mod]
-
-       res[3,i] = (A+B+C) / denom
-    return res
+    return (P, V, ana_kz)
 
 
 def tfd(old_a, old_b, new_a, new_b, eta, d, N):
@@ -614,32 +533,31 @@ def tfd(old_a, old_b, new_a, new_b, eta, d, N):
         Computing fourier transform of coordinates with stretching
     """
     pi = np.pi
-    fft = np.zeros(2*N+1, dtype=complex)
     old_ba = old_b - old_a
     new_ba = new_b - new_a
-    k_na = 2.0j*pi*new_a/d
-    k_nb = 2.0j*pi*new_b/d
-    prefac = -1 / (2.0j*pi) * old_ba/new_ba
-    # print(f"DEBUG tfd old_a={old_a}, old_b={old_b}, new_a={new_a}, new_b={new_b}, eta={eta}, d={d}, N={N}")
-    # print(f"DEBUG tfd k_na={k_na}, k_nb={k_nb}")
-    for i_mod in range(-N, N+1):
-        sinc_prefac = old_ba * i_mod / d * np.sinc(i_mod/d * new_ba) * np.exp(-1.0j*np.pi*i_mod * (new_b+new_a) / d)
-        exp_kb = np.exp(-k_nb*i_mod)
-        exp_ka = np.exp(-k_na*i_mod)
-        # print(f"DEBUG tfd pref*exp(k_nb-k_na) - sincpref={np.abs(prefac*(exp_kb-exp_ka) - sinc_prefac)/np.abs(sinc_prefac)}")
-        n_diff = i_mod*new_ba
-        if (i_mod == 0):
-            fft[N] = old_ba / d
-        elif (d-n_diff == 0):
-            # fft[i_mod + N] = prefac * (1/i_mod - eta/2 * new_ba/(d+n_diff)) * (exp_kb-exp_ka) - eta/2 * old_ba*np.exp(-2.0j*pi*new_a/new_ba)/d
-            fft[i_mod + N] = sinc_prefac * (1/i_mod - eta/2 * new_ba/(d+n_diff)) - eta/2 * old_ba*np.exp(-2.0j*pi*new_a/new_ba)/d
-        elif (d+n_diff == 0):
-            # fft[i_mod + N] = prefac * (1/i_mod + eta/2 * new_ba/(d-n_diff)) * (exp_kb-exp_ka) - eta/2 * old_ba*np.exp(2.0j*pi*new_a/new_ba)/d
-            fft[i_mod + N] = sinc_prefac * (1/i_mod + eta/2 * new_ba/(d-n_diff)) - eta/2 * old_ba*np.exp(2.0j*pi*new_a/new_ba)/d
-        else:
-            # fft[i_mod + N] = prefac * (1/i_mod + eta/2 * (new_ba/(d-n_diff)-new_ba/(d+n_diff))) * (exp_kb-exp_ka)
-            fft[i_mod + N] = sinc_prefac * (1/i_mod + eta/2 * (new_ba/(d-n_diff)-new_ba/(d+n_diff)))
-    # print(f"DEBUG tfd fft={fft}")
+
+    # mode 0 is a problem so we split
+    neg_modes = np.arange(-N, 0)
+    pos_modes = np.arange(1, N+1)
+
+    neg_sinc_prefac = old_ba * neg_modes / d * np.sinc(neg_modes/d * new_ba) * np.exp(-1.0j*np.pi*neg_modes * (new_b+new_a) / d)
+    pos_sinc_prefac = old_ba * pos_modes / d * np.sinc(pos_modes/d * new_ba) * np.exp(-1.0j*np.pi*pos_modes * (new_b+new_a) / d)
+    neg_fft = neg_sinc_prefac * (1/neg_modes + eta/2 * (new_ba/(d-neg_modes*new_ba)-new_ba/(d+neg_modes*new_ba)))
+    pos_fft = pos_sinc_prefac * (1/pos_modes + eta/2 * (new_ba/(d-pos_modes*new_ba)-new_ba/(d+pos_modes*new_ba)))
+    fft_zero = old_ba / d
+    fft = np.concatenate((neg_fft, [fft_zero], pos_fft))
+    # Once we've done this, there is only a problem if d-modes*new_ba=0 or d+modes*new_ba=0
+
+    # This is the safe way. We could also probably check whether the period is a multiple of some part of the structure
+    i_m_diff = -d / new_ba
+    i_p_diff = d / new_ba
+    if (i_m_diff == int(i_m_diff)):
+        sinc_prefac = old_ba * i_m_diff / d * np.sinc(i_m_diff/d * new_ba) * np.exp(-1.0j*np.pi*i_m_diff * (new_b+new_a) / d)
+        fft[int(i_m_diff)+N] = sinc_prefac * (1/i_m_diff + eta/2 * new_ba/(d-i_m_diff*new_ba)) - eta/2 * old_ba*np.exp(2.0j*pi*new_a/new_ba)/d
+    if (i_p_diff == int(i_p_diff)):
+        sinc_prefac = old_ba * i_p_diff / d * np.sinc(i_p_diff/d * new_ba) * np.exp(-1.0j*np.pi*i_p_diff * (new_b+new_a) / d)
+        fft[int(i_p_diff)+N] = sinc_prefac * (1/i_p_diff + eta/2 * new_ba/(d+i_p_diff*new_ba)) - eta/2 * old_ba*np.exp(2.0j*pi*new_a/new_ba)/d
+
     return fft
 """
 fft=0.;

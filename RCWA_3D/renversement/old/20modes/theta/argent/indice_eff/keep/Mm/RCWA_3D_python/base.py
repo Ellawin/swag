@@ -589,7 +589,7 @@ def homogene(s, ext=0):
 
 def efficace(a,ext,E):
     nb_mod = int(np.real(ext[0, 0]))
-    res = np.copy(ext[:4, :nb_mod])
+    res = ext[:4, :nb_mod]
     tmp = a.eps[0, 0] * a.mu[0, 0] * a.k0**2
 
     for i in range(nb_mod):
