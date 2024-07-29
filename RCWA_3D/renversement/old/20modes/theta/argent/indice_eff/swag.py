@@ -9,12 +9,12 @@ import PyMoosh as pm
 np.set_printoptions(threshold=sys.maxsize,linewidth=110)# DEBUGGING
 
 # Modal 
-Mm = 20
+Mm = 15
 Nm = 0
 eta = 0.999 # stretching
 
 # Wave
-wavelength = 600.123
+wavelength = 700.123
 #theta = 0.0 * np.pi/180. #latitude (z)
 phi = 90.0 * np.pi/180. # précession (xy)
 #pol = 0*np.pi/180. # 0 (TE?) ou 90 (TM?) pour fixer la pola
@@ -25,6 +25,7 @@ eps_dielec = 1
 eps_metal = mat.epsAgbb(wavelength)
 
 # geometry
+#list_gap = np.linspace(3,20,5)
 l_gap = 10.215
 l_pml = 40
 
@@ -71,31 +72,28 @@ sub_sp.ny = [0,periody]
 top_gp.oy = [0,periody]
 top_gp.ny = [0,periody]
 
+#for idx_gap, l_gap in enumerate(list_gap):
+    #print(idx_gap)
 top_gp.ox = [0, l_pml, periodx / 2 , periodx / 2 + l_gap, periodx]
 top_gp.nx = [0, l_pml, periodx / 2 , periodx / 2 + l_gap, periodx]
 sub_sp.ox = [0, l_pml, periodx / 2 , periodx / 2 + l_gap, periodx]
 sub_sp.nx = [0, l_pml, periodx / 2 , periodx / 2 + l_gap, periodx]
 
 list_theta = np.linspace(0,90, 100) / 180 * np.pi
-r_gp_ana_layer = np.empty(list_theta.size, dtype = complex)
 r_gp_pm = np.empty(list_theta.size, dtype = complex)
-n_gp_ana_layer = np.empty(list_theta.size)
 n_gp_pm = np.empty(list_theta.size)
-n_gp_ana_quasistatic = np.empty(list_theta.size)
-r_gp_ana_quasistatic = np.empty(list_theta.size, dtype = complex)
-n_gp_ana_approx1 = np.empty(list_theta.size)
-r_gp_ana_approx1 = np.empty(list_theta.size, dtype = complex)
 
 top_gp.a0 = 0
 top_gp.b0 = 0
 
 # calcul de l'indice effectif du GP en utilisant les formules analytiques
 # couche finie de métal
-neff_ana_layer = np.sqrt(1 - 4 / (k0**2 * eps_metal * 10 * l_gap)) # * np.sqrt(eps_gap) # couche métallique finie (Denis formula)
+#neff_ana_layer = np.sqrt(1 - 4 / (k0**2 * eps_metal * 10 * l_gap)) # * np.sqrt(eps_gap) # couche métallique finie (Denis formula)
 # quasistatic
-neff_ana_quasistatic = - wavelength / (np.pi * eps_metal * l_gap)
+#neff_ana_quasistatic = - wavelength / (np.pi * eps_metal * l_gap)
 # 1ère approximation
-neff_ana_approx1 = wavelength / (l_gap * np.pi) * np.arctanh(- 1 / eps_metal)
+#neff_ana_approx1 = wavelength / (l_gap * np.pi) * np.arctanh(- 1 / eps_metal)
+
 
 
 ### avec pymoosh
@@ -104,70 +102,74 @@ layer_down = [1,0,1]
 start_index_eff = 4
 tol = 1e-12
 step_max = 100000
-thicknesses_down = [200,10,200]
+thicknesses_down = [200,l_gap,200]  
 Layer_down = pm.Structure(material_list, layer_down, thicknesses_down)
 neff_pm = pm.steepest(start_index_eff, tol, step_max, Layer_down, wavelength, 1)
+print(neff_pm)
+#neff_pm = 4.001749845220168-0.004834102582483683j
+
 
 [P0, V0] = base.reseau(top_gp)
 #index0 = np.argmin(np.imag(V0))
 index0 = np.argmin(abs(V0 - neff_pm * top_gp.k0))
 neff = V0[index0] / top_gp.k0
 
-print("analytique = ", neff_ana_layer)
-print("quasistatic = ", neff_ana_quasistatic)
-print("1ère approximation = ", neff_ana_approx1)
-print("pymoosh = ", neff_pm) # pm et analytique n'ont rien à voir :)
+# print("analytique = ", neff_ana_layer)
+# print("quasistatic = ", neff_ana_quasistatic)
+# print("1ère approximation = ", neff_ana_approx1)
+# print("pymoosh = ", neff_pm) # pm et analytique n'ont rien à voir :)
 
 
 for idx, theta in enumerate(list_theta):
-    print(idx)
+        print(idx)
 
 ###kz = neff cos theta * k0 
 
     #a = -neff_ana_layer * k0 * np.sin(theta) * np.cos(phi) # inspiration Yanis # kx
     #a = -k0 * np.sin(theta) * np.cos(phi)
-    a = 0
-    top_gp.a0 = a
-    sub_sp.a0 = a
+    # a = 0
+    # top_gp.a0 = a
+    # sub_sp.a0 = a
 
-    #b = -neff_ana_layer * k0 * np.sin(theta) * np.sin(phi) #Inspiration Yanis # ky
-    b = - neff * k0 * np.sin(theta) # * np.sin(phi)
-    top_gp.b0 = b
-    sub_sp.b0 = b
+    # #b = -neff_ana_layer * k0 * np.sin(theta) * np.sin(phi) #Inspiration Yanis # ky
+    # b = - neff * k0 * np.sin(theta) # * np.sin(phi)
+    # top_gp.b0 = b
+    # sub_sp.b0 = b
     
-    [Pgp, Vgp] = base.reseau(top_gp)
-    [Psp, Vsp] = base.reseau(sub_sp)
-    #index_gp = np.argmin(np.imag(Vgp))
-    index_gp_ana_layer = np.argmin(abs(Vgp - neff_ana_layer * top_gp.k0))
-    print("index layer = ", index_gp_ana_layer )
-    n_gp_ana_layer[idx] = np.real(Vgp[index_gp_ana_layer] / top_gp.k0) # équivaut au kz/k0
+    # [Pgp, Vgp] = base.reseau(top_gp)
+    # [Psp, Vsp] = base.reseau(sub_sp)
+    # #index_gp = np.argmin(np.imag(Vgp))
+    # index_gp_ana_layer = np.argmin(abs(Vgp - neff_ana_layer * top_gp.k0))
+    # print("index layer = ", index_gp_ana_layer )
+    # n_gp_ana_layer[idx] = np.real(Vgp[index_gp_ana_layer] / top_gp.k0) # équivaut au kz/k0
 
-    S = base.interface(Pgp, Psp)
-    r_gp_ana_layer[idx] = S[index_gp_ana_layer, index_gp_ana_layer]
+    # S = base.interface(Pgp, Psp)
+    # r_gp_ana_layer[idx] = S[index_gp_ana_layer, index_gp_ana_layer]
 
-    """
+    
 
     #a = -neff_pm * k0 * np.sin(theta) * np.cos(phi) # inspiration Yanis # kx
-    a = 0
+        a = 0
     #a = -k0 * np.sin(theta) * np.cos(phi)
-    top_gp.a0 = a
-    sub_sp.a0 = a
+        top_gp.a0 = a
+        sub_sp.a0 = a
 
-    b = -neff_pm * k0 * np.sin(theta) * np.sin(phi) #Inspiration Yanis # ky
+        b = -np.real(neff_pm) * k0 * np.sin(theta)#* np.sin(phi) #Inspiration Yanis # ky
     #b = - k0 * np.sin(theta) * np.sin(phi)
-    top_gp.b0 = b
-    sub_sp.b0 = b
+        top_gp.b0 = b
+        sub_sp.b0 = b
     
-    [Pgp, Vgp] = base.reseau(top_gp)
-    [Psp, Vsp] = base.reseau(sub_sp)
+        [Pgp, Vgp] = base.reseau(top_gp)
+        [Psp, Vsp] = base.reseau(sub_sp)
     #index_gp = np.argmin(np.imag(Vgp))
-    index_gp_pm = np.argmin(abs(Vgp - neff_pm * top_gp.k0))
-    print("index PM = ", index_gp_pm )
-    n_gp_pm[idx] = np.real(Vgp[index_gp_pm] / top_gp.k0) # équivaut au kz/k0
+        index_gp_pm = np.argmin(abs(Vgp - neff_pm * top_gp.k0))
+        #print("index PM = ", index_gp_pm )
+        n_gp_pm[idx] = np.real(Vgp[index_gp_pm] / top_gp.k0) # équivaut au kz/k0
 
-    S = base.interface(Pgp, Psp)
-    r_gp_pm[idx] = S[index_gp_pm, index_gp_pm]
+        S = base.interface(Pgp, Psp)
+        r_gp_pm[idx] = S[index_gp_pm, index_gp_pm]
 
+"""
     a = 0
     #a = -neff_ana_quasistatic * k0 * np.sin(theta) * np.cos(phi) # inspiration Yanis # kx
     #a = -k0 * np.sin(theta) * np.cos(phi)
@@ -219,6 +221,38 @@ for idx, theta in enumerate(list_theta):
     # #plt.show(block=False)
     """
 
+plt.figure(10)
+plt.plot(list_theta * 180 / np.pi, np.abs(r_gp_pm) ** 2)
+plt.xlabel("Theta")
+plt.ylabel("$r_{GP}$")
+plt.ylim([0,1])
+plt.title("Reflexion of GP")
+plt.show(block=False)
+#plt.savefig("Rgp_conique_10modes_gapvar.jpg")
+
+plt.figure(11)
+plt.plot(list_theta * 180 / np.pi, np.abs(n_gp_pm) ** 2)
+plt.xlabel("Theta")
+plt.ylabel("$n_{GP}$")
+plt.title("Effective index of GP")
+plt.show(block=False)
+#plt.savefig("Ngp_conique_10modes_gapvar.jpg")
+
+
+# neff_sp = np.sqrt(eps_metal/(1+eps_metal))
+
+# thetalim1 = np.arcsin(1 / np.real(neff_pm))
+# thetalim2 = np.arcsin( np.real(neff_sp) / np.real(neff_pm))
+
+# abs_thetalim1 = np.arcsin(1 / np.abs(neff_pm))
+# abs_thetalim2 = np.arcsin( np.abs(neff_sp) / np.abs(neff_pm))
+
+# print(thetalim1 * 180 / np.pi)
+# print(thetalim2 * 180 / np.pi)
+# print(abs_thetalim1 * 180 / np.pi)
+# print(abs_thetalim2 * 180 / np.pi)
+
+"""
 plt.figure(13)
 plt.plot(list_theta * 180 / np.pi, n_gp_ana_layer, label = 'Ana Layer')
 plt.plot(list_theta * 180 / np.pi, n_gp_ana_quasistatic, label = 'Ana Quasistatic')
@@ -288,3 +322,4 @@ plt.title("Reflexion of GP (phase)")
 plt.show(block=False)
 plt.savefig("RgpPhi_theta_gap3_20modes_lam600_period90_phi90_pml40_withneff_KEEP.jpg")
 
+"""
