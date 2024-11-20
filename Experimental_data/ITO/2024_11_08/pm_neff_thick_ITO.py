@@ -54,11 +54,13 @@ perm_gap = 1.45**2
 # Stack
 material_list = [perm_env, 'Aluminium', perm_cube, SiO2, ITO, metallic_layer, perm_gap]
 stack_ito = [0, 2, 6, 5, 4, 3]
+stack_ito2 = [2, 6, 5, 4, 3]
+
 
 #Thicknesses
 thick_cube = 30
-thick_gap = 10
-thick_metal = 5
+thick_gap = 5
+thick_metal = 1
 #thick_ito = 100
 list_ito = np.linspace(1,200,100)
 thick_sio2 = 200
@@ -80,10 +82,13 @@ GP_effective_index = np.empty(list_ito.size)
 
 for thick_ito in list_ito:
     print(idx_ito)
-    thicknesses = [0, thick_cube, thick_gap, thick_metal, thick_ito, thick_sio2]
-    Layers = pm.Structure(material_list, stack_ito, thicknesses, verbose=False)
+    thicknesses = [thick_cube, thick_gap, thick_metal, thick_ito, thick_sio2]
+    Layers = pm.Structure(material_list, stack_ito2, thicknesses, verbose=False)
     GP_effective_index[idx_ito] = modes.steepest(start_index_eff, tol, step_max, Layers, wavelength, polarization)
     idx_ito+=1
+
+np.savez("ITOthick_gap5_gold1.npz", ngp =GP_effective_index, list_ito = list_ito)
+
 
 plt.figure(1)
 plt.plot(list_ito, GP_effective_index)
@@ -91,8 +96,5 @@ plt.xlabel("ITO thickness (nm)")
 plt.ylabel("$n_{eff}$")
 plt.title("Effective index of Gap-Plasmon")
 plt.show(block=False)
-plt.savefig(f"nGP_PM_CubeThick{thick_cube}Mat{perm_cube}_GapThick{thick_gap}Mat{perm_gap}_MetalThick{thick_metal}Mat{perm_metal}_SubThick{thick_sio2}Mat{SiO2}.pdf")
-
-np.savez(f"nGP_PM_CubeThick{thick_cube}Mat{perm_cube}_GapThick{thick_gap}Mat{perm_gap}_MetalThick{thick_metal}Mat{perm_metal}_SubThick{thick_sio2}Mat{SiO2}.pdf", ngp =GP_effective_index, list_ito = list_ito)
-
-# Conclusion : 100 nm c'est bien (constant entre 25 et 200)
+plt.savefig("ITOthick_gap5_gold1.jpg")
+plt.savefig("ITOthick_gap5_gol1.pdf")
