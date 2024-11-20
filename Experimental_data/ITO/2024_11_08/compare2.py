@@ -48,22 +48,22 @@ SiO2 = pm.Material([shelf, book, page], specialType="RII", verbose=False)
 #Cube, metal, env and dielec
 metallic_layer = pm.Material("Gold", verbose=False)
 perm_cube = pm.Material("Silver", verbose=False)
+
 perm_env = 1.0
-#perm_gap = 1.45**2
-perm_gap = perm_env
+perm_gap = 1.45**2
 
 # Stack
 material_list = [perm_env, 'Aluminium', perm_cube, SiO2, ITO, metallic_layer, perm_gap]
-stack_ito = [2, 6, 5, 4, 3] # Ag / Air / Au / ITO / SIO2
+stack_3 = [2, 6, 5, 4, 3] # Ag / 1.45 / Au / ITO / Glass
+
 
 #Thicknesses
 thick_cube = 30.001
-#thick_gap = 10
-list_gap = np.linspace(1.001,10,20)
-thick_metal = 5.0213
+list_gap = np.linspace(1,10,50)
+thick_metal = 1.0213
 thick_ito = 100.0054
-#list_ito = np.linspace(1,200,100)
 thick_sio2 = 200.02357
+thick_incident_air = 100.0012
 
 #Wave
 wavelength = 700.0584
@@ -73,28 +73,29 @@ polarization = 1
 #Find the mode (it's unique) which is able to propagate in the GP gap from the quasi_stat_milloupe_model
 perm_metal = metallic_layer.get_permittivity(wavelength)
 tol = 1e-12
-step_max = 1e6
+step_max = 100000
 
 idx_gap = 0
-GP_effective_index = np.empty(list_gap.size)
-start_index_eff = np.empty(list_gap.size)
+nGP_3 = np.empty(list_gap.size, dtype = complex)
+start_index_eff = np.empty(list_gap.size, dtype = complex)
 
 for thick_gap in list_gap:
     print(idx_gap)
-    thicknesses = [0, thick_cube, thick_gap, thick_metal, thick_ito, thick_sio2]
-    Layers = pm.Structure(material_list, stack_ito, thicknesses, verbose=False)
+    thicknesses_3 = [thick_cube, thick_gap, thick_metal, thick_ito, thick_sio2]
+    Layers_1 = pm.Structure(material_list, stack_3, thicknesses_3, verbose=False)
     start_index_eff[idx_gap] = np.sqrt(perm_gap) * np.sqrt((4)/(k0**2 * thick_metal * thick_gap * abs(perm_metal)))
-    GP_effective_index[idx_gap] = modes.steepest(start_index_eff[idx_gap], tol, step_max, Layers, wavelength, polarization)
+    nGP_3[idx_gap] = modes.steepest(start_index_eff[idx_gap], tol, step_max, Layers_1, wavelength, polarization)
     idx_gap+=1
 
-plt.figure(8)
-plt.plot(list_gap, GP_effective_index, label = "$n_{GP}$")
-plt.plot(list_gap, start_index_eff, label = "start $n_{GP}$")
+np.savez("data/compare2.npz", nGP_3 = nGP_3, start_index_eff = start_index_eff, list_gap = list_gap)
+
+plt.figure(1)
+plt.plot(list_gap, np.real(nGP_3), label = "Ag / 1.45 / Au / ITO / SiO2")
+plt.plot(list_gap, start_index_eff, "-", label = "start $n_{GP}$")
 plt.legend()
 plt.xlabel("Gap dielectric thickness (nm)")
 plt.ylabel("$n_{eff}$")
 plt.title("Effective index of Gap-Plasmon")
 plt.show(block=False)
-plt.savefig(f"data/nGP_PM_Cube-Thick{thick_cube}-Mat{perm_cube.get_permittivity(wavelength)}_Gap-Mat{perm_gap}_Metal-Thick{thick_metal}-Mat{metallic_layer.get_permeability(wavelength)}_ito-thick{thick_ito}-Mat{ITO.get_permittivity(wavelength)}_Sub-Thick{thick_sio2}-Mat{SiO2.get_permittivity(wavelength)}.pdf")
-
-np.savez(f"data/nGP_PM_Cube-Thick{thick_cube}-Mat{perm_cube.get_permittivity(wavelength)}_Gap-Mat{perm_gap}_Metal-Thick{thick_metal}-Mat{metallic_layer.get_permeability(wavelength)}_ito-thick{thick_ito}-Mat{ITO.get_permittivity(wavelength)}_Sub-Thick{thick_sio2}-Mat{SiO2.get_permittivity(wavelength)}.pdf", ngp =GP_effective_index, list_gap = list_gap, start = start_index_eff)
+plt.savefig("data/compare2.pdf")
+plt.savefig("data/compare2.jpg")
