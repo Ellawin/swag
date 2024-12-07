@@ -469,7 +469,7 @@ list_perm_dielec = np.linspace(1.4, 2, 5)**2
 perm_sub = 1.5 ** 2 # substrat Glass
  
 
-n_mod = 100 
+n_mod = 30
 n_mod_total = 2 * n_mod + 1
 
 list_wavelength = np.linspace(450,1000, 200)
@@ -479,11 +479,13 @@ R = np.empty((list_perm_dielec.size, list_wavelength.size))
 
 geometry_acc = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": thick_mol, "thick_metalliclayer": thick_metal, "thick_sub": thick_sub, "thick_accroche": thick_accroche, "period": period}
 
-for idx_gap, perm_dielec in enumerate(list_perm_dielec):
-    print(idx_gap)
-    for idx_wav, wavelength in enumerate(list_wavelength):
-        #print(idx_wav)
-    
+def ref(param):
+        (idx_perm_dielec, idx_wavelength) = param
+        perm_dielec = list_perm_dielec[idx_perm_dielec]
+        wavelength = list_wavelength[idx_wavelength]
+
+        print("idx dielec = ", idx_perm_dielec, "/", len(list_perm_dielec))
+        print("wave = ", idx_wavelength, "/", len(list_wavelength))
         perm_Ag = epsAgbb(wavelength) 
         perm_Au = epsAubb(wavelength)
         perm_ito = nk_ITO(wavelength) ** 2
@@ -491,8 +493,15 @@ for idx_gap, perm_dielec in enumerate(list_perm_dielec):
         materials_Cr = {"perm_env": perm_env, "perm_dielec": perm_dielec, "perm_sub": perm_sub, "perm_reso": perm_Ag, "perm_metalliclayer": perm_Au, "perm_accroche": perm_ito}
 
         wave = {"wavelength": wavelength, "angle": angle, "polarization": polarization}
-        R[idx_gap,idx_wav] = reflectance(geometry_acc, wave, materials_Cr, n_mod)
+        return reflectance(geometry_acc, wave, materials_Cr, n_mod)
   
+aux = [(idx_perm_dielec,idx_wavelength) for idx_perm_dielec in range(len(list_perm_dielec)) for idx_wavelength in range(len(list_wavelength))]
+
+from multiprocessing import Pool as ThreadPool
+pool = ThreadPool(processes=1)
+res = pool.map(ref, aux)
+
+R = np.reshape(res, shape=(len(list_perm_dielec),len(list_wavelength)))
 
 plt.figure(3)
 for idx_gap, perm_dielec in enumerate(list_perm_dielec):
@@ -502,9 +511,11 @@ for idx_gap, perm_dielec in enumerate(list_perm_dielec):
 plt.xlabel("Wavelength (nm)")
 plt.ylabel("Reflectance ")
 #plt.title("R up")
-plt.show(block=False)
-plt.savefig("indice_gap_lam400-1500_ICRtest1.jpg")
+plt.show()
+# plt.savefig("indice_gap_lam400-1500_ICRtest1.jpg")
 
-np.savez("indice_gap_standard_structure_lam400-1500.npz", list_wavelength = list_wavelength, R = R)
+# np.savez("indice_gap_standard_structure_lam400-1500.npz", list_wavelength = list_wavelength, R = R)
 
-# paralleliser avec la méthode boucle directement (sans fonction)
+# paralleliser avec la méthode boucle directement -> en utilisant Pool (multiprocessing)
+# Numpy parallélise tout seul le calcul matriciel sans le montrer 
+## Ne pas utiliser + de 50% des CPU disponibles (en apparence) en simultané (22 coeurs au total)
