@@ -361,7 +361,7 @@ def HErmes(T,U,V,P,Amp,ny,h,a0):
     M = M * np.exp(1j * a0 * x)
     return(M)
 
-### SWAG functions
+### SWAG script (enlever la fonction du script mais garder ce format comme exemple / cas général de la structure étudiée)
 def reflectance(geometry, wave, materials, n_mod):  
     period = geometry["period"]
     #thick_super = geometry["thick_super"] / period
