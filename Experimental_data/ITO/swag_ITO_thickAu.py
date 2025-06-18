@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 from scipy.special import erf
 from scipy.linalg import toeplitz, inv
 
+
+### Materials
 def nk_ITO(lam):
     tableau3D = []
 
@@ -19,7 +21,7 @@ def nk_ITO(lam):
     
     tableau3D = np.array(tableau3D)
     wl = []
-    wl = tableau3D[:,0]
+    wl = tableau3D[:,0]*10^(-3)
     n = []
     n = tableau3D[:,1]
     k = []
@@ -29,7 +31,7 @@ def nk_ITO(lam):
     k_int = np.interp(lam, wl, k)
 
     ri = n_int + 1.0j * k_int
-    return(ri)
+    return(n_int, k_int, ri)
 
 def nk_TiN(lam):
     tableau3D = []
@@ -503,17 +505,17 @@ plt.title("R up")
 plt.show(block=False)
 plt.savefig("ITO_Rup.jpg")
 
-# plt.figure(4)
-# for idx_metal, thick_metal in enumerate(list_metal):
-#     plt.plot(list_wavelength, Rd_ito[idx_metal], label = f"Au thick : {int(thick_metal)} nm")
+plt.figure(4)
+for idx_metal, thick_metal in enumerate(list_metal):
+    plt.plot(list_wavelength, Rd_ito[idx_metal], label = f"Au thick : {int(thick_metal)} nm")
 
-# plt.legend()
-# plt.xlabel("Wavelength (nm)")
-# plt.ylabel("Reflectance ")
-# plt.title("R down")
-# plt.show(block=False)
-# plt.savefig("ITO_Rdown.jpg")
+plt.legend()
+plt.xlabel("Wavelength (nm)")
+plt.ylabel("Reflectance ")
+plt.title("R down")
+plt.show(block=False)
+plt.savefig("ITO_Rdown.jpg")
 
 R = [Ru_ito, Rd_ito]
 
-np.savez("data_accroches_all_Rdown-Rup.npz", list_wavelength = list_wavelength, R = R)
+#np.savez("data_accroches_all_Rdown-Rup.npz", list_wavelength = list_wavelength, R = R)
