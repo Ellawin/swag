@@ -1,0 +1,7 @@
+#1 Simulation #1
+    Rdown
+    thick NC = 55 nm
+    gap = 3 nm
+    PVP = 0 - 7 nm
+    Gold = 10 nm
+
