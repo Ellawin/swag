@@ -179,7 +179,7 @@ def grating(k0,a0,pol,e1,e2,n,blocs):
     M1=e1*np.eye(n,n)
     M2=1/e1*np.eye(n,n)
     for k in range(0,n_blocs):
-        M1=M1+step(0,e2-e1,blocs[k,0],blocs[k,1],n)
+        M1=M1+step(0,e2-e1,blocs[k,0],blocs[k,1],n) # TODO : if e2 is a list, I can modelize more than 2 materials in the same layer
         M2=M2+step(0,1/e2-1/e1,blocs[k,0],blocs[k,1],n)
     alpha=np.diag(a0+2*np.pi*np.arange(-nmod,nmod+1))+0j
     if (pol==0):
@@ -240,22 +240,24 @@ def reflectance(geometry, wave, materials, n_mod):
     thick_gap = geometry["thick_gap"] / period
     thick_func = geometry["thick_func"] / period
     thick_mol = geometry["thick_mol"] / period
-    thick_gold = geometry["thick_gold"] / period
+    thick_metal = geometry["thick_metal"] / period
     thick_sub = geometry["thick_sub"] / period
-    thick_chrome = geometry["thick_chrome"] / period 
+    thick_accroche = geometry["thick_accroche"] / period 
+    thick_pvp = geometry["thick_pvp"] / period
 
     wavelength = wave["wavelength"] / period
     angle = wave["angle"] 
     polarization = wave["polarization"]
 
     perm_env = materials["perm_env"]
-    perm_dielec = materials["perm_dielec"]
-    perm_Glass = materials["perm_Glass"]
-    perm_Ag = materials["perm_Ag"]
-    perm_Au =  materials["perm_Au"]
-    perm_Cr = materials["perm_Cr"]
+    perm_pvp = materials["perm_pvp"]
+    perm_sub = materials["perm_sub"]
+    perm_reso = materials["perm_reso"]
+    perm_metal =  materials["perm_metal"]
+    perm_accroche = materials["perm_accroche"]
     perm_delta = materials["perm_delta"]
     perm_func = materials["perm_func"]
+    perm_polymer = materials["perm_polymer"]
 
     pos_reso = np.array([[width_reso, (1 - width_reso) / 2]])
 
@@ -264,68 +266,51 @@ def reflectance(geometry, wave, materials, n_mod):
     k0 = 2 * np.pi / wavelength
     a0 = k0 * np.sin(angle * np.pi / 180)
 
-    Pup, Vup = homogene(k0, a0,polarization, perm_env, n) # valid only if first layer thickness = 0
+    Pup, Vup = homogene(k0, a0,polarization, perm_env, n)
     S = np.block([[np.zeros([n, n]), np.eye(n, dtype=np.complex128)], [np.eye(n), np.zeros([n, n])]])
 
-    if thick_mol < (thick_gap - thick_func):
-        P1, V1 = grating(k0, a0, polarization, perm_env, perm_Ag, n, pos_reso)
-        S = cascade(S, interface(Pup, P1))
-        S = c_bas(S, V1, thick_reso)
+    P1, V1 = grating(k0, a0, polarization, perm_env, perm_reso, n, pos_reso)
+    S = cascade(S, interface(Pup, P1))
+    S = c_bas(S, V1, thick_reso)
+
+    P2, V2 = grating(k0, a0, polarization, perm_env, perm_pvp, n, pos_reso)
+    S = cascade(S, interface(P1, P2))
+    S = c_bas(S, V2, thick_pvp)
+
+    P3, V3 = grating(k0, a0, polarization, perm_env, perm_polymer, n, pos_reso)
+    S = cascade(S, interface(P2, P3))
+    S = c_bas(S, V3, thick_gap - (thick_mol + thick_func))
     
-        P2, V2 = grating(k0, a0, polarization, perm_env, perm_dielec, n, pos_reso)
-        S = cascade(S, interface(P1, P2))
-        S = c_bas(S, V2, thick_gap - (thick_mol + thick_func))
+    P4, V4 = grating(k0, a0, polarization, perm_delta, perm_polymer, n, pos_reso)
+    S = cascade(S, interface(P3, P4))
+    S = c_bas(S, V4, thick_mol)
 
-        P3, V3 = homogene(k0, a0, polarization, perm_delta, n) # grating delta / dielec
-        S = cascade(S, interface(P2, P3))
-        S = c_bas(S, V3, thick_mol)
-
-    else:
-        P1, V1 = grating(k0, a0, polarization, perm_env, perm_Ag, n, pos_reso)
-        S = cascade(S, interface(Pup, P1))
-        S = c_bas(S, V1, thick_reso - (thick_mol - (thick_gap - thick_func)))
-
-        P2, V2 = grating(k0, a0, polarization, perm_delta, perm_Ag, n, pos_reso)
-        S = cascade(S, interface(P1, P2))
-        S = c_bas(S, V2, thick_mol - (thick_gap - thick_func))
-
-        P3, V3 = homogene(k0, a0, polarization, perm_delta, n) # grating delta / dielec
-        S = cascade(S, interface(P2, P3))
-        S = c_bas(S, V3, thick_gap-thick_func)
-
-        # P2, V2 = grating(k0, a0, polarization, perm_dielec, perm_Ag, n, pos_reso)
-        # S = cascade(S, interface(P1, P2))
-        # S = c_bas(S, V2, thick_mol - (thick_gap - thick_func))
-
-        # P3, V3 = homogene(k0, a0, polarization, perm_dielec, n)
-        # S = cascade(S, interface(P2, P3))
-        # S = c_bas(S, V3, thick_gap)
-    
     Pfunc,Vfunc = homogene(k0, a0, polarization, perm_func, n)
-    S = cascade(S, interface(P3, Pfunc))
+    S = cascade(S, interface(P4, Pfunc))
     S = c_bas(S, Vfunc, thick_func)
 
-    Pgold, Vgold = homogene(k0, a0, polarization, perm_Au, n)
-    S = cascade(S, interface(Pfunc, Pgold))
-    S = c_bas(S, Vgold, thick_gold)
+    Pmetal, Vmetal = homogene(k0, a0, polarization, perm_metal, n)
+    S = cascade(S, interface(Pfunc, Pmetal))
+    S = c_bas(S, Vmetal, thick_metal)
 
-    Pcr, Vcr = homogene(k0, a0, polarization, perm_Cr, n)
-    S = cascade(S, interface(Pgold, Pcr))
-    S = c_bas(S, Vcr, thick_chrome)
+    Paccr, Vaccr = homogene(k0, a0, polarization, perm_accroche, n)
+    S = cascade(S, interface(Pmetal, Paccr))
+    S = c_bas(S, Vaccr, thick_accroche)
 
-    Pdown, Vdown = homogene(k0, a0, polarization, perm_Glass, n)
-    S = cascade(S, interface(Pcr, Pdown))
+    Pdown, Vdown = homogene(k0, a0, polarization, perm_sub, n)
+    S = cascade(S, interface(Paccr, Pdown))
     S = c_bas(S, Vdown, thick_sub)
 
     # reflexion quand on eclaire par le dessus
     Rup = abs(S[n_mod, n_mod]) ** 2 # correspond à ce qui se passe au niveau du SP layer up
     # transmission quand on éclaire par le dessus
-    Tup = abs(S[n + n_mod, n_mod]) ** 2 * np.real(Vdown[n_mod]) / (k0 * np.cos(angle)) / perm_Glass * perm_env
+    #print("TEST = ", np.cos(angle))
+    Tup = abs(S[n + n_mod, n_mod]) ** 2 * np.real(Vdown[n_mod]) / (k0 * np.cos(angle)) / perm_sub * perm_env
     # reflexion quand on éclaire par le dessous
     #Rdown = abs(S[n + position_down, n + position_down]) ** 2 
     Rdown = abs(S[n + n_mod, n + n_mod]) ** 2 
     # transmission quand on éclaire par le dessous
-    Tdown = abs(S[n_mod, n + n_mod]) ** 2 / np.real(Vdown[n_mod]) * perm_Glass * k0 * np.cos(angle) / perm_env
+    Tdown = abs(S[n_mod, n + n_mod]) ** 2 / np.real(Vdown[n_mod]) * perm_sub * k0 * np.cos(angle) / perm_env
 
     # calcul des phases du coefficient de réflexion
     #phase_R_up = np.angle(S[n_mod, n_mod])
@@ -342,9 +327,10 @@ thick_gap = 5 # hauteur de diéléctrique en dessous du cube
 thick_func = 1 # présent partout tout le temps
 thick_mol = 3 # si molécules détectées
 #thick_gold = 20 # hauteur de l'or au dessus du substrat
-thick_cr = 0 # couche d'accroche 
+thick_accroche = 0 # couche d'accroche 
 period = 300.2153 # periode
 thick_sub = 200
+thick_pvp = 0
 
 # A modifier selon le point de fonctionnement
 #wavelength = 950 #800.021635
@@ -352,17 +338,19 @@ angle = 0
 polarization = 1
 
 ## Paramètres des matériaux
-perm_env = 1.33 ** 2
+perm_env = 1.0 ** 2
 #perm_env=1
 perm_dielec = 1.45 ** 2 # spacer (polymer)
-perm_Glass = 1.5 ** 2 # substrat
+perm_sub = 1.5 ** 2 # glass
 # perm_Ag = epsAgbb(wavelength) # argent
 # perm_Au = epsAubb(wavelength) # or
 # perm_Cr = epsCrbb(wavelength)
 RI_delta = 0.01 # to add in the 'clean' interface
 perm_delta = (1.33 + RI_delta)**2 # molecules
-print("perm delta = ", perm_delta)
+#print("perm delta = ", perm_delta)
 perm_func = perm_dielec # couche de fonctionalisation des molécules
+perm_pvp = perm_dielec 
+perm_polymer = perm_dielec 
 
 n_mod = 80 
 n_mod_total = 2 * n_mod + 1
@@ -392,7 +380,7 @@ n_mod_total = 2 * n_mod + 1
 list_wavelength = np.linspace(850, 1500, 100)
 # for a specific config, I want its sensitivity (Rup)
 
-list_gold = np.linspace(5, 100, 20)
+list_gold = np.arange(5, 61, 5)
 idx_gold = 0
 
 lam_s_ru = np.empty(list_gold.size)
@@ -411,8 +399,8 @@ for thick_gold in list_gold:
     plt.close()
     print("gold = ",idx_gold, "/", list_gold.size)
 # the geometry does not depend on wavelength but on the gold thickness
-    geometry = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": 0, "thick_gold": list_gold[idx_gold], "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-    geometry_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": thick_mol, "thick_gold": list_gold[idx_gold], "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+    geometry = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": 0, "thick_metal": list_gold[idx_gold], "thick_sub": thick_sub, "thick_accroche": thick_accroche, "period": period, "thick_pvp": thick_pvp}
+    geometry_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": thick_mol, "thick_metal": list_gold[idx_gold], "thick_sub": thick_sub, "thick_accroche": thick_accroche, "period": period, "thick_pvp": thick_pvp}
 
 # the materials, wave, reflectance and sensitivity depend on the wavelength
     Ru = np.empty(list_wavelength.size)
@@ -434,10 +422,10 @@ for thick_gold in list_gold:
 
     for wavelength in list_wavelength:
         print("lam = ", idx_lam, "/", list_wavelength.size)
-        perm_Ag = epsAgbb(wavelength)
-        perm_Au = epsAubb(wavelength)
-        perm_Cr = epsCrbb(wavelength)
-        materials = {"perm_env": perm_env, "perm_dielec": perm_dielec, "perm_Glass": perm_Glass, "perm_Ag": perm_Ag, "perm_Au": perm_Au, "perm_Cr": perm_Cr, "perm_delta": perm_delta, "perm_func": perm_func}
+        perm_reso = epsAgbb(wavelength)
+        perm_metal = epsAubb(wavelength)
+        perm_accroche = epsCrbb(wavelength)
+        materials = {"perm_env": perm_env, "perm_pvp": perm_pvp, "perm_sub": perm_sub, "perm_reso": perm_reso, "perm_metal": perm_metal, "perm_accroche": perm_accroche, "perm_delta": perm_delta, "perm_func": perm_func, "perm_polymer": perm_polymer}
         wave = {"wavelength": wavelength, "angle": angle, "polarization": polarization}
     # paramaters for reference config
         [Rd[idx_lam], Ru[idx_lam], Td[idx_lam], Tu[idx_lam]] = reflectance(geometry, wave, materials, n_mod)
@@ -508,8 +496,6 @@ plt.plot(list_gold,S_max_rd,label="Rd")
 plt.plot(list_gold,S_max_tu,label="Tu")
 plt.plot(list_gold,S_max_td,label="Td")
 plt.legend()
-
-#plt.xlabel("Gold thickness (nm)")
 plt.ylabel("Sensitivity")
 plt.subplot(2,1,2)
 plt.plot(list_gold, lam_s_ru, label="Ru")
@@ -523,6 +509,22 @@ plt.show(block=False)
 plt.savefig("sensitivity_RTall_allgold.pdf")
 plt.savefig("sensitivity_RTall_allgold.jpg")
 
+file = open(f"Data_sensitivity_pvp.txt", 'w')
+file.write("Environnement : Air / n = 1.0 \n")
+file.write("Cube : Argent / n(lambda) / 70 nm\n")
+file.write("PVP : n = 1.45 / 0 nm\n")
+file.write("Gap diélectrique : n = 1.45 / 5 nm\n")
+file.write("Molécules : delta_n = 0.01 / 3 nm \n")
+file.write("Fonctionnalisation diélectrique / n = 1.45 / 1 nm\n")
+file.write("Accroche substrat-metal : Chrome / n(lambda) / 0 nm\n")
+file.write("Couche métallique : Or / n(lambda) / [5-60] nm\n")
+file.write("Substrat : SiO2 / n = 1.5 / 200 nm\n")
+file.write("\n")
+file.write("Gold thickness (nm) \t Wl Ru \t Wl Rd \ Wl Tu \t Wl Td \t S_Ru \t S_Rd \t S_Tu \t S_td \n")
+
+for i in range(len(list_gold)):
+    file.write(f"{list_gold[i]}, {lam_s_ru[i]}\t, {lam_s_rd[i]}\t, {lam_s_tu[i]}\t,{lam_s_td[i]}\t,{S_max_ru[i]}\t,{S_max_rd[i]}\t,{S_max_tu[i]}\t,{S_max_td[i]}\n")
+file.close()
 
 
 ### To have an idea of a wavelength of interest. Conclusion : lam = 950 nm
