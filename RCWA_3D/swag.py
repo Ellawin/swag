@@ -41,7 +41,7 @@ eps_glass = 1.5 **2
 # deb_cube = 100.01
 
 # nb_lamb = 75
-lambdas = np.linspace(400,1800,200)
+lambdas = np.linspace(400,1800,3)
 #lambdas = np.concatenate((np.arange(7000,9000,400),np.arange(9000,11000,50), np.arange(11000,13000,400)))
 r = np.zeros(len(lambdas), dtype=complex)
 theta = 0.0 * np.pi/180. #latitude (z)
@@ -173,8 +173,8 @@ for i, lambd in enumerate(lambdas):
     # print("Pair", Pair)
     # print("Vair", Vair)
     # isort = np.argsort(np.imag(Vair))
-    Vair_sort = Vair#[isort]
-    Vair_sort = np.real(Vair_sort) * (np.abs(np.real(Vair_sort))>1e-10) + 1.0j*(np.imag(Vair_sort) * (np.abs(np.imag(Vair_sort))>1e-10))
+    #Vair_sort = Vair#[isort]
+    #Vair_sort = np.real(Vair_sort) * (np.abs(np.real(Vair_sort))>1e-10) + 1.0j*(np.imag(Vair_sort) * (np.abs(np.imag(Vair_sort))>1e-10))
     # print("Vair sorted")
     # for i in range(len(Vair_sort)):
     #     print(Vair_sort[i])
@@ -225,9 +225,9 @@ for i, lambd in enumerate(lambdas):
 
 
     # print(S)
-    # b = np.argmin(np.imag(Vair))
+    b = np.argmin(np.imag(Vair))
     # print(b, Vair[b])
-    # r[i] = S[b,b]
+    r[i] = S[b,b]
     # print(lambd, S[b,b], abs(S[b,b]))
 #     # print(Vair[b])
 #     # print(np.real(Vair[b])/gp.k0)

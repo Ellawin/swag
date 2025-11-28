@@ -49,7 +49,7 @@ list_gap = list_gap[::-1]
 step = 8
 plt.figure(1)
 for i, thick_or in enumerate(list_or[::step]):
-    plt.plot(list_gap, GP_effective_index[i*step,:], label=f"or = {np.round(thick_or, 1)} nm")
+    plt.plot(list_gap, GP_effective_index[i*step,:], label=f"gold = {np.round(thick_or, 1)} nm")
 
 plt.xlabel("Gap thickness (nm)")
 plt.ylabel("$n_{eff}$")

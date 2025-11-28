@@ -1,12 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
-#import PyMoosh as pm
+import PyMoosh as pm
 from scipy.special import erf
 from scipy.linalg import toeplitz, inv
 
 i = complex(0,1)
 
-### Materials
+### Materials (you can update)
 
 def epsAubb(lam):
 
@@ -96,7 +96,7 @@ def faddeeva(z,N):
     w[idx1]=np.conj(2*np.exp(-z[idx1]**2) - w[idx1])
     return(w)
 
-### RCWA functions
+### RCWA functions (do not modify)
 def cascade(T,U):
     '''Cascading of two scattering matrices T and U.
     Since T and U are scattering matrices, it is expected that they are square
@@ -213,6 +213,7 @@ def interface(P,Q):
     return S
 
 def HErmes(T,U,V,P,Amp,ny,h,a0):
+    # not checked
     n = int(np.shape(T)[0] / 2)
     nmod = int((n-1) / 2)
     nx = n
@@ -231,9 +232,11 @@ def HErmes(T,U,V,P,Amp,ny,h,a0):
     M = M * np.exp(1j * a0 * x)
     return(M)
 
-### SWAG functions
-def reflectance(geometry, wave, materials, n_mod):  
-    period = geometry["period"]
+### SWAG functions (You have to modify this)
+def reflectance(geometry, wave, materials, n_mod):  # compute the reflection coefficient for the SWAG-P structure 
+    
+    # geometrical parameters
+    period = geometry["period"] # period of the supercell
     #thick_super = geometry["thick_super"] / period
     width_reso = geometry["width_reso"] / period
     thick_reso = geometry["thick_reso"] / period
@@ -244,34 +247,38 @@ def reflectance(geometry, wave, materials, n_mod):
     thick_sub = geometry["thick_sub"] / period
     thick_chrome = geometry["thick_chrome"] / period 
 
+    # light parameters
     wavelength = wave["wavelength"] / period
     angle = wave["angle"] 
     polarization = wave["polarization"]
+    k0 = 2 * np.pi / wavelength
+    a0 = k0 * np.sin(angle * np.pi / 180)
 
+    # materials
     perm_env = materials["perm_env"]
     perm_dielec = materials["perm_dielec"]
     perm_Glass = materials["perm_Glass"]
     perm_Ag = materials["perm_Ag"]
     perm_Au =  materials["perm_Au"]
     perm_Cr = materials["perm_Cr"]
-    perm_delta = # 
 
+    # position of the resonator in the supercell (centered)
     pos_reso = np.array([[width_reso, (1 - width_reso) / 2]])
 
+    # number of modes for the RCWA method 
     n = 2 * n_mod + 1
 
-    k0 = 2 * np.pi / wavelength
-    a0 = k0 * np.sin(angle * np.pi / 180)
-
+    # first matrix (superstrate medium)
     Pup, Vup = homogene(k0, a0,polarization, perm_env, n)
     S = np.block([[np.zeros([n, n]), np.eye(n, dtype=np.complex128)], [np.eye(n), np.zeros([n, n])]])
 
+    # Following matrices (for SWAG-P structure, you have to modify this)
     if thick_mol < (thick_gap - thick_func):
         P1, V1 = grating(k0, a0, polarization, perm_env, perm_Ag, n, pos_reso)
         S = cascade(S, interface(Pup, P1))
         S = c_bas(S, V1, thick_reso)
     
-        P2, V2 = grating(k0, a0, polarization, perm_env, perm_env + perm_delta, n, pos_reso)
+        P2, V2 = grating(k0, a0, polarization, perm_env, perm_dielec, n, pos_reso)
         S = cascade(S, interface(P1, P2))
         S = c_bas(S, V2, thick_gap - (thick_mol + thick_func))
 
@@ -284,21 +291,13 @@ def reflectance(geometry, wave, materials, n_mod):
         S = cascade(S, interface(Pup, P1))
         S = c_bas(S, V1, thick_reso - (thick_mol - (thick_gap - thick_func)))
 
-        P2, V2 = grating(k0, a0, polarization, perm_env + perm_delta, perm_Ag, n, pos_reso)
+        P2, V2 = grating(k0, a0, polarization, perm_dielec, perm_Ag, n, pos_reso)
         S = cascade(S, interface(P1, P2))
         S = c_bas(S, V2, thick_mol - (thick_gap - thick_func))
 
         P3, V3 = homogene(k0, a0, polarization, perm_dielec, n)
         S = cascade(S, interface(P2, P3))
         S = c_bas(S, V3, thick_gap)
-
-        # P2, V2 = grating(k0, a0, polarization, perm_dielec, perm_Ag, n, pos_reso)
-        # S = cascade(S, interface(P1, P2))
-        # S = c_bas(S, V2, thick_mol - (thick_gap - thick_func))
-
-        # P3, V3 = homogene(k0, a0, polarization, perm_dielec, n)
-        # S = cascade(S, interface(P2, P3))
-        # S = c_bas(S, V3, thick_gap)
 
     Pgold, Vgold = homogene(k0, a0, polarization, perm_Au, n)
     S = cascade(S, interface(P3, Pgold))
@@ -327,124 +326,82 @@ def reflectance(geometry, wave, materials, n_mod):
     #phase_R_down = np.angle(S[n + n_mod, n + n_mod])
     #phase_T_up = np.angle(S[n + n_mod, n_mod])
     #phase_T_down = np.angle(S[n_mod, n + n_mod])
-    return Rdown, Rup, Tdown, Tup#, Rup #phase_R_down#, Rup, phase_R_up#, Tdown, phase_T_down, Tup, phase_T_up
+    return Rdown#, Rup#, Tdown, Tup#, Rup #phase_R_down#, Rup, phase_R_up#, Tdown, phase_T_down, Tup, phase_T_up
 
 ### Swag-structure
-thick_super = 200
+thick_super = 200 # epaisseur du superstrat (0 marche aussi, normalement)
 width_reso = 70 # largeur du cube
-thick_reso = width_reso # width_reso #hauteur du cube
-thick_gap = 5 # hauteur de diéléctrique en dessous du cube
+thick_reso = width_reso #hauteur du cube
+thick_gap = 3 # hauteur de diéléctrique en dessous du cube 
 thick_func = 1 # présent partout tout le temps
-thick_mol = 2 # si molécules détectées
+thick_mol = 3 # si molécules détectées
 thick_gold = 20 # hauteur de l'or au dessus du substrat
-thick_cr = 0 # couche d'accroche 
-period = 300.2153 # periode
-thick_sub = 200
+thick_cr = 1 # couche d'accroche substrat / metal 
+period = 300.2153 # periode de la suercellule
+thick_sub = 200 # epaisseur du subtrat, vise beaucoup pour pas avoir de transmission
 
 # A modifier selon le point de fonctionnement
-wavelength = 950 #800.021635
-angle = 0
-polarization = 1
+wavelength = 800.021635
+angle = 0 # 0 pour incidence normale, angle à renseigner en radians
+polarization = 1 # 1 pour TM, 0 pour TE 
+    # Si angle = 0 peu importe
+    # Sinon, compare les deux mais probablement la polarisation TM te sera plus utile que la TE
 
 ## Paramètres des matériaux
-#perm_env = 1.33 ** 2
-perm_env=1
+perm_env=1 # air
 perm_dielec = 1.45 ** 2 # spacer
-perm_Glass = 1.5 ** 2 # substrat
-perm_Ag = epsAgbb(wavelength) # argent
-perm_Au = epsAubb(wavelength) # or
-perm_Cr = epsCrbb(wavelength)
-perm_moldelta = 0.01 # to add in the 'clean' interface
+perm_Glass = 1.5 ** 2 # substrat (verre, approximatif)
+# perm_Ag = epsAgbb(wavelength) # argent
+# perm_Au = epsAubb(wavelength) # or
+# perm_Cr = epsCrbb(wavelength)
 
+# Nombre de modes pour la RCWA
 n_mod = 100 
-n_mod_total = 2 * n_mod + 1
+n_mod_total = 2 * n_mod + 1 #taille des matrices
 
-geometry = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-# TODO : changer l'indice de la couche molécule à Delta_n au lieu de n_molecules 
-geometry_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": thick_mol, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+# Calcul de la réflexion en fonction de la longueur d'onde
+list_wavelength = np.linspace(600, 800, 50)
+R = np.empty(list_wavelength.size) # initialisation du vecteur R
 
-materials = {"perm_env": perm_env, "perm_dielec": perm_dielec, "perm_Glass": perm_Glass, "perm_Ag": perm_Ag, "perm_Au": perm_Au, "perm_Cr": perm_Cr}
-wave = {"wavelength": wavelength, "angle": angle, "polarization": polarization}
-Rd, Ru, Td, Tu = reflectance(geometry, wave, materials, n_mod)
-Rd_mol, Ru_mol, Td_mol, Tu_mol = reflectance(geometry_mol, wave, materials, n_mod)
+idx = 0
 
+geometry = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": thick_mol, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
 
+for wavelength in list_wavelength:
+    perm_Ag = epsAgbb(wavelength) # argent
+    perm_Au = epsAubb(wavelength)
+    perm_Cr = epsCrbb(wavelength)
+    materials = {"perm_env": perm_env, "perm_dielec": perm_dielec, "perm_Glass": perm_Glass, "perm_Ag": perm_Ag, "perm_Au": perm_Au, "perm_Cr": perm_Cr}
+    wave = {"wavelength": wavelength, "angle": angle, "polarization": polarization}
+    R[idx] = reflectance(geometry, wave, materials, n_mod)
 
-
-### Bulk RI sensitivity from Homola
-# S_B = delta(lam) / delta(n)
-
-##### Previous work - un-understood several weeks later
-# Sensibility_Rd = (abs(Rd-Rd_mol)) / (0.001) # to be continued
-# Sensibility_Ru = (abs(Ru-Ru_mol)) / (0.001) # to be continued
-# Sensibility_Td = (abs(Td-Td_mol)) / (0.001) # to be continued
-# Sensibility_Tu = (abs(Tu-Tu_mol)) / (0.001) # to be continued
-
-# print(Sensibility_Rd)
-# print(Sensibility_Ru)
-# print(Sensibility_Td)
-# print(Sensibility_Tu)
-
-
-### To have an idea of a wavelength of interest. Conclusion : lam = 950 nm
-
-# list_wavelength = np.linspace(450, 1500, 80)
-# Rd = np.empty(list_wavelength.size)
-# Ru = np.empty(list_wavelength.size)
-# Td = np.empty(list_wavelength.size)
-# Tu = np.empty(list_wavelength.size)
-# Rd_mol = np.empty(list_wavelength.size)
-# Ru_mol = np.empty(list_wavelength.size)
-# Td_mol = np.empty(list_wavelength.size)
-# Tu_mol = np.empty(list_wavelength.size)
-# idx = 0
-
-# geometry = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-# geometry_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": thick_mol, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-
-# for wavelength in list_wavelength:
-#     print(idx)
-#     perm_Ag = epsAgbb(wavelength) # argent
-#     perm_Au = epsAubb(wavelength)
-#     perm_Cr = epsCrbb(wavelength)
-#     materials = {"perm_env": perm_env, "perm_dielec": perm_dielec, "perm_Glass": perm_Glass, "perm_Ag": perm_Ag, "perm_Au": perm_Au, "perm_Cr": perm_Cr}
-#     wave = {"wavelength": wavelength, "angle": angle, "polarization": polarization}
-#     Rd[idx], Ru[idx], Td[idx], Tu[idx] = reflectance(geometry, wave, materials, n_mod)
-#     Rd_mol[idx], Ru_mol[idx], Td_mol[idx], Tu_mol[idx] = reflectance(geometry_mol, wave, materials, n_mod)
-#     idx += 1
+    idx += 1
+    print(idx)
     
+plt.figure(0)
+plt.plot(list_wavelength, R, "r")
+plt.legend()
 
-# plt.figure(1)
-# plt.plot(list_wavelength, Rd, "r", label = "R down")
-# plt.plot(list_wavelength, Rd_mol, "--") 
-# plt.plot(list_wavelength, Ru, "b", label = "R up")
-# plt.plot(list_wavelength, Ru_mol, "--") 
-# plt.plot(list_wavelength, Td, "g", label = "T down")
-# plt.plot(list_wavelength, Td_mol, "--") 
-# plt.plot(list_wavelength, Tu, "o", label = "T up")
-# plt.plot(list_wavelength, Tu_mol, "--") 
-# plt.legend()
-# plt.ylabel("Observable")
-# plt.title("Sensibility")
-# plt.xlabel("Wavelength (nm)")
+plt.ylabel("Reflectance")
+#plt.title("Metallic layer thickness variations")
+plt.xlabel("Wavelength (nm)")
 
-# plt.show(block=False)
-# plt.savefig("sensitivity_1.pdf")
-# plt.savefig("sensitivity_1.jpg")
+plt.show(block=False)
+#plt.savefig("gold_1.pdf")
+#plt.savefig("gold_1.jpg")
 
 
-
-# file = open(f"Data_sensitivity_1.txt", 'w')
+# file = open(f"Data_structures_gold_1.txt", 'w')
 # file.write("Environnement : Air / n = 1 \n")
 # file.write("Cube : Argent / n(lambda) / 70 nm\n")
-# file.write("Gap diélectrique / n = 1.45 / 5 nm\n")
-# file.write("Fonctionnalisation diélectrique / n = 1.45 / 1 nm\n")
-# file.write("Couche métallique : Or / n(lambda) / 20 nm\n")
+# file.write("Gap diélectrique / n = 1.45 / 3 nm\n")
+# file.write("Fonctionnalisation dielectrique / n = 1.45 / 1 nm\n")
+# file.write("Couche métallique : Or / n(lambda) / 0-100 nm\n")
 # file.write("Substrat : SiO2 / n = 1.5 / 200 nm\n")
 # file.write("\n")
-# file.write("Wavelengths (nm) \t Rd \t Rd_mol\t Ru \t Ru_mol \t Td \t Td_mol\t Tu \t Tu_mol \n")
+# file.write("Wavelengths (nm) \t R_gold0_mol\t R_gold0_nomol\t R_gold10_mol\t R_gold10_nomol\t R_gold20_mol\t R_gold20_nomol\t R_gold30_mol\t R_gold30_nomol\t R_gold40_mol\t R_gold40_nomol\t R_gold50_mol\t R_gold50_nomol\t R_gold100_mol\t R_gold100_nomol\n")
 
 # for i in range(len(list_wavelength)):
-#     file.write(f"{list_wavelength[i]}, {Rd[i]}\t, {Rd_mol[i]}\t, {Ru[i]}\t,{Ru_mol[i]}\t,{Td[i]}\t,{Td_mol[i]}\t,{Tu[i]}\t,{Tu_mol[i]}\n")
+#     file.write(f"{list_wavelength[i]}, {R_gold0_mol[i]}\t, {R_gold0_nomol[i]}\t, {R_gold10_mol[i]}\t,{R_gold10_nomol[i]}\t,{R_gold20_mol[i]}\t,{R_gold20_nomol[i]}\t,{R_gold30_mol[i]}\t,{R_gold30_nomol[i]}\t,{R_gold40_mol[i]}\t, {R_gold40_nomol[i]}\t {R_gold50_mol[i]}\t {R_gold50_nomol[i]}\t {R_gold100_mol[i]}\t {R_gold100_nomol[i]}\n")
 # file.close()
 
