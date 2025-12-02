@@ -319,301 +319,151 @@ def reflectance(geometry, wave, materials, n_mod):
     #phase_T_down = np.angle(S[n_mod, n + n_mod])
     return Rdown, Rup, Tdown, Tup#, Rup #phase_R_down#, Rup, phase_R_up#, Tdown, phase_T_down, Tup, phase_T_up
 
-### Swag-structure
+### Swag-structure / geometry
 thick_super = 200
-width_reso = 70 # largeur du cube
+width_reso = 55 # largeur du cube
 thick_reso = width_reso # width_reso #hauteur du cube
 thick_gap = 5 # hauteur de diéléctrique en dessous du cube
 thick_func = 1 # présent partout tout le temps
 thick_mol = 3 # si molécules détectées
-#thick_gold = 20 # hauteur de l'or au dessus du substrat
+thick_gold = 30 # hauteur de l'or au dessus du substrat
 thick_accroche = 0 # couche d'accroche 
 period = 300.2153 # periode
 thick_sub = 200
-thick_pvp = 4 # in nm, only on the bottom of the cube
+thick_pvp = 0 # in nm, only on the bottom of the cube
 
-# A modifier selon le point de fonctionnement
-#wavelength = 950 #800.021635
-angle = 0 # in degrees ???
-polarization = 1
+# Wave parameters
+# wavelength = 950
+angle = 0 # in degrees !!!
+polarization = 1 # 0 for TE, 1 for TM
 
-## Paramètres des matériaux
-perm_env = 1.0 ** 2
-#perm_env=1
+## PMaterials parameters
+n_env = 1.0
+perm_env = n_env ** 2 # air
 perm_dielec = 1.45 ** 2 # spacer (polymer)
 perm_sub = 1.5 ** 2 # glass
 # perm_Ag = epsAgbb(wavelength) # argent
 # perm_Au = epsAubb(wavelength) # or
 # perm_Cr = epsCrbb(wavelength)
-RI_delta = 0.01 # to add in the 'clean' interface
-perm_delta = (1.33 + RI_delta)**2 # molecules
+RI_delta = 0.05 # to add in the 'clean' interface
+perm_delta = (n_env + RI_delta)**2 # molecules
 #print("perm delta = ", perm_delta)
-perm_func = perm_dielec # couche de fonctionalisation des molécules
-perm_pvp = perm_dielec 
-perm_polymer = perm_dielec 
+perm_func = perm_dielec # functionalization layer for biomolecules
+perm_pvp = perm_dielec # pvp 'layer' around the cube
+perm_polymer = perm_dielec  # layer of photopolymerisation used to attached the cubes on the metallic layer
 
+
+## RCWA parameters
 n_mod = 80 
 n_mod_total = 2 * n_mod + 1
 
-# ##### Sensitivity - test 1
+# Computation of the R,T coefficients depending on the wavelength (to set up the wavelength range for resonance)
 
-# geometry = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-# # TODO : changer l'indice de la couche molécule à Delta_n au lieu de n_molecules 
-# geometry_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": thick_mol, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+list_wavelength = np.linspace(700, 850, 100)
 
-# materials = {"perm_env": perm_env, "perm_dielec": perm_dielec, "perm_Glass": perm_Glass, "perm_Ag": perm_Ag, "perm_Au": perm_Au, "perm_Cr": perm_Cr, "perm_delta": perm_delta, "perm_func": perm_func}
-# wave = {"wavelength": wavelength, "angle": angle, "polarization": polarization}
-# Rd, Ru, Td, Tu = reflectance(geometry, wave, materials, n_mod)
-# Rd_mol, Ru_mol, Td_mol, Tu_mol = reflectance(geometry_mol, wave, materials, n_mod)
-
-# Sensibility_Rd = (abs(Rd-Rd_mol)) / (RI_delta) # to be continued
-# Sensibility_Ru = (abs(Ru-Ru_mol)) / (RI_delta) # to be continued
-# Sensibility_Td = (abs(Td-Td_mol)) / (RI_delta) # to be continued
-# Sensibility_Tu = (abs(Tu-Tu_mol)) / (RI_delta) # to be continued
-
-# print(Sensibility_Rd)
-# print(Sensibility_Ru)
-# print(Sensibility_Td)
-# print(Sensibility_Tu)
-
-# Sensitivity - depending on wavelength
-list_wavelength = np.linspace(850, 1500, 100)
-# for a specific config, I want its sensitivity (Rup)
-
-#list_gold = np.arange(5, 41, 2)
-list_gold = np.linspace(5,41,1)
-idx_gold = 0
-
-lam_s_ru = np.empty(list_gold.size)
-S_max_ru = np.empty(list_gold.size)
-
-lam_s_rd = np.empty(list_gold.size)
-S_max_rd = np.empty(list_gold.size)
-
-lam_s_tu = np.empty(list_gold.size)
-S_max_tu = np.empty(list_gold.size)
-
-lam_s_td = np.empty(list_gold.size)
-S_max_td = np.empty(list_gold.size)
-
-delta_lam_reso = np.empty(list_gold.size)
-
-for thick_gold in list_gold:
-    plt.close()
-    print("gold = ",idx_gold, "/", list_gold.size)
-# the geometry does not depend on wavelength but on the gold thickness
-    geometry = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": 0, "thick_metal": list_gold[idx_gold], "thick_sub": thick_sub, "thick_accroche": thick_accroche, "period": period, "thick_pvp": thick_pvp}
-    geometry_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": thick_mol, "thick_metal": list_gold[idx_gold], "thick_sub": thick_sub, "thick_accroche": thick_accroche, "period": period, "thick_pvp": thick_pvp}
+# geometries for sensor before and after exposition of molecules
+geometry = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": 0, "thick_metal": thick_gold, "thick_sub": thick_sub, "thick_accroche": thick_accroche, "period": period, "thick_pvp": thick_pvp}
+geometry_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": thick_mol, "thick_metal": thick_gold, "thick_sub": thick_sub, "thick_accroche": thick_accroche, "period": period, "thick_pvp": thick_pvp}
 
 # the materials, wave, reflectance and sensitivity depend on the wavelength
-    Ru = np.empty(list_wavelength.size)
-    Ru_mol = np.empty(list_wavelength.size)
-    Sensitivity_Ru = np.empty(list_wavelength.size)
+Ru = np.empty(list_wavelength.size)
+Ru_mol = np.empty(list_wavelength.size)
+Sensitivity_Ru = np.empty(list_wavelength.size)
 
-    Rd = np.empty(list_wavelength.size)
-    Rd_mol = np.empty(list_wavelength.size)
-    Sensitivity_Rd = np.empty(list_wavelength.size)
+Rd = np.empty(list_wavelength.size)
+Rd_mol = np.empty(list_wavelength.size)
+Sensitivity_Rd = np.empty(list_wavelength.size)
 
-    Tu = np.empty(list_wavelength.size)
-    Tu_mol = np.empty(list_wavelength.size)
-    Sensitivity_Tu = np.empty(list_wavelength.size)
+Tu = np.empty(list_wavelength.size)
+Tu_mol = np.empty(list_wavelength.size)
+Sensitivity_Tu = np.empty(list_wavelength.size)
 
-    Td = np.empty(list_wavelength.size)
-    Td_mol = np.empty(list_wavelength.size)
-    Sensitivity_Td = np.empty(list_wavelength.size)
-    idx_lam = 0
+Td = np.empty(list_wavelength.size)
+Td_mol = np.empty(list_wavelength.size)
+Sensitivity_Td = np.empty(list_wavelength.size)
 
-    for wavelength in list_wavelength:
-        print("lam = ", idx_lam, "/", list_wavelength.size)
-        perm_reso = epsAgbb(wavelength)
-        perm_metal = epsAubb(wavelength)
-        perm_accroche = epsCrbb(wavelength)
-        materials = {"perm_env": perm_env, "perm_pvp": perm_pvp, "perm_sub": perm_sub, "perm_reso": perm_reso, "perm_metal": perm_metal, "perm_accroche": perm_accroche, "perm_delta": perm_delta, "perm_func": perm_func, "perm_polymer": perm_polymer}
-        wave = {"wavelength": wavelength, "angle": angle, "polarization": polarization}
+idx_lam = 0
+
+for wavelength in list_wavelength:
+    print("lam = ", idx_lam, "/", list_wavelength.size)
+    perm_reso = epsAgbb(wavelength)
+    perm_metal = epsAubb(wavelength)
+    perm_accroche = epsCrbb(wavelength)
+    materials = {"perm_env": perm_env, "perm_pvp": perm_pvp, "perm_sub": perm_sub, "perm_reso": perm_reso, "perm_metal": perm_metal, "perm_accroche": perm_accroche, "perm_delta": perm_delta, "perm_func": perm_func, "perm_polymer": perm_polymer}
+    wave = {"wavelength": wavelength, "angle": angle, "polarization": polarization}
     # paramaters for reference config
-        [Rd[idx_lam], Ru[idx_lam], Td[idx_lam], Tu[idx_lam]] = reflectance(geometry, wave, materials, n_mod)
+    [Rd[idx_lam], Ru[idx_lam], Td[idx_lam], Tu[idx_lam]] = reflectance(geometry, wave, materials, n_mod)
     # parameters for sensitive config
-        [Rd_mol[idx_lam], Ru_mol[idx_lam], Td_mol[idx_lam], Tu_mol[idx_lam]] = reflectance(geometry_mol, wave, materials, n_mod)
-    # only on Rup for the first step
-        # Sensitivity_Ru[idx_lam] = (abs(Ru[idx_lam]-Ru_mol[idx_lam])) / (RI_delta)
-        # Sensitivity_Tu[idx_lam] = (abs(Tu[idx_lam]-Tu_mol[idx_lam])) / (RI_delta)
-        # Sensitivity_Rd[idx_lam] = (abs(Rd[idx_lam]-Rd_mol[idx_lam])) / (RI_delta)
-        # Sensitivity_Td[idx_lam] = (abs(Td[idx_lam]-Td_mol[idx_lam])) / (RI_delta)
-        idx_lam+=1
-
-    # idx_max_ru = np.argmax(Sensitivity_Ru)
-    # S_max_ru[idx_gold] = max(Sensitivity_Ru)
-    # lam_s_ru[idx_gold] = list_wavelength[idx_max_ru]
-
-    # idx_max_tu = np.argmax(Sensitivity_Tu)
-    # S_max_tu[idx_gold] = max(Sensitivity_Tu)
-    # lam_s_tu[idx_gold] = list_wavelength[idx_max_tu]
-
-    # idx_max_rd = np.argmax(Sensitivity_Rd)
-    # S_max_rd[idx_gold] = max(Sensitivity_Rd)
-    # lam_s_rd[idx_gold] = list_wavelength[idx_max_rd]
-
-    # idx_max_td = np.argmax(Sensitivity_Td)
-    # S_max_td[idx_gold] = max(Sensitivity_Td)
-    # lam_s_td[idx_gold] = list_wavelength[idx_max_td]
-
-    idx_reso_ru = np.argmin(Ru)
-    idx_reso_ru_delta = np.argmin(Ru_mol)
-    delta_lam_reso[idx_gold] = np.abs(idx_reso_ru - idx_reso_ru_delta)  
-
-# print("idx_max = ", idx_max)
-# print("S max = ", S_max)
-# print("Lam_r = ", lam_r)
-
-    # plt.figure(idx_gold)
-    # plt.subplot(3,1,1)
-    # plt.plot(list_wavelength, Sensitivity_Ru, label = "Ru")
-    # plt.plot(list_wavelength, Sensitivity_Rd, label = "Rd")
-    # plt.plot(list_wavelength, Sensitivity_Tu, label = "Tu")
-    # plt.plot(list_wavelength, Sensitivity_Td, label = "Td")
-    # plt.legend()
-    # plt.ylabel("$\Delta R$ (or T) / $\Delta n$")
-    # plt.xlabel("Wavelength (nm)")
-    # plt.subplot(3,1,2)
-    # plt.plot(list_wavelength, Ru,"r", label = "Ru")
-    # plt.plot(list_wavelength, Ru_mol,"--r" )#,label = "Ru with molecule")
-    # plt.plot(list_wavelength, Rd,"k", label = "Rd")
-    # plt.plot(list_wavelength, Rd_mol,"--k")# ,label = "Rd with molecule")
-    # plt.ylabel("R")
-    # plt.legend()
-    # plt.subplot(3,1,3)
-    # plt.plot(list_wavelength, Tu,"g", label = "Tu")
-    # plt.plot(list_wavelength, Tu_mol, "--g")#,label = "Tu")
-    # plt.plot(list_wavelength, Td,"b", label = "Td")
-    # plt.plot(list_wavelength, Td_mol,"--b")# ,label = "Td with molecule")
-    # plt.legend()
-    # plt.ylabel("T")
-    # plt.xlabel("Wavelength (nm)")
-    # plt.show(block=False)
-    # plt.savefig(f"pvp0/air/thick_gold_5-41-2/sensitivity_RTall_gold={thick_gold}.pdf")
-    # plt.savefig(f"pvp0/air/thick_gold_5-41-2/sensitivity_RTall_gold={thick_gold}.jpg")
+    [Rd_mol[idx_lam], Ru_mol[idx_lam], Td_mol[idx_lam], Tu_mol[idx_lam]] = reflectance(geometry_mol, wave, materials, n_mod)
+    # Computation of the R-sensitivities for all wavelengths
+    idx_lam+=1
 
 
-    idx_gold += 1
-
-plt.figure(90)
-plt.plot(list_gold,S_max_ru, delta_lam_reso)
-plt.ylabel("$\Delta \lambda$")
-plt.xlabel("Gold thickness (nm)")
-plt.show(block=False)
-plt.savefig("pvp0/air/thick_gold_5-41-2/delta_lambda.pdf")
-plt.savefig("pvp0/air/thick_gold_5-41-2/delta_lambda.jpg")
-
-# plt.figure(91)
-# plt.plot(list_gold, lam_s_ru, label="Ru")
-# plt.plot(list_gold, lam_s_rd, label="Rd")
-# plt.plot(list_gold, lam_s_tu, label="Tu")
-# plt.plot(list_gold, lam_s_td, label="Td")
-# plt.ylabel("Lambda sensitivity")
-# plt.legend()
-# plt.show(block=False)
-# plt.savefig("pvp0/air/thick_gold_5-41-2/sensitivity_RTall_allgold.pdf")
-# plt.savefig("pvp0/air/thick_gold_5-41-2/sensitivity_RTall_allgold.jpg")
-
-# plt.figure(89)
-# plt.subplot(2,1,1)
-# plt.plot(list_gold,S_max_ru,label="Ru")
-# plt.plot(list_gold,S_max_rd,label="Rd")
-# plt.plot(list_gold,S_max_tu,label="Tu")
-# plt.plot(list_gold,S_max_td,label="Td")
-# plt.legend()
-# plt.ylabel("Sensitivity")
-# plt.subplot(2,1,2)
-# plt.plot(list_gold, lam_s_ru, label="Ru")
-# plt.plot(list_gold, lam_s_rd, label="Rd")
-# plt.plot(list_gold, lam_s_tu, label="Tu")
-# plt.plot(list_gold, lam_s_td, label="Td")
-# plt.xlabel("Gold thickness (nm)")
-# plt.ylabel("Lambda resonance")
-# plt.legend()
-# plt.show(block=False)
-# plt.savefig("pvp0/air/thick_gold_5-41-2/sensitivity_RTall_allgold.pdf")
-# plt.savefig("pvp0/air/thick_gold_5-41-2/sensitivity_RTall_allgold.jpg")
-
-# file = open(f"pvp0/air/thick_gold_5-41-2/Data_sensitivity_pvp.txt", 'w')
-# file = open(f"pvp0/air/thick_gold_5-41-2/Delta_lambda.txt", 'w')
-
-# file.write("Environnement : Air / n = 1.0 \n")
-# file.write("Cube : Argent / n(lambda) / 70 nm\n")
-# file.write("PVP : n = 1.45 / 4 nm\n")
-# file.write("Gap diélectrique : n = 1.45 / 5 nm\n")
-# file.write("Molécules : delta_n = 0.01 / 3 nm \n")
-# file.write("Fonctionnalisation diélectrique / n = 1.45 / 1 nm\n")
-# file.write("Accroche substrat-metal : Chrome / n(lambda) / 0 nm\n")
-# file.write("Couche métallique : Or / n(lambda) / [5-40] nm\n")
-# file.write("Substrat : SiO2 / n = 1.5 / 200 nm\n")
-# file.write("\n")
-# file.write("Gold thickness (nm) \t Delta Lambda \n")
-
-# for i in range(len(list_gold)):
-#     file.write(f"{list_gold[i]}, {delta_lam_reso[i]}\n")
-# file.close()
+## Plot the R, T spectra to set up the wavelength range
+plt.figure(1)
+plt.plot(list_wavelength, Ru, label = '$n$')
+plt.plot(list_wavelength, Ru_mol, label = '$n+\Delta n$')
+plt.xlabel('Wavelength (nm)')
+plt.legend()
+plt.ylabel('R up')
+plt.savefig(f"pvp0/Ru_wave_gold={thick_gold}_pvp={thick_pvp}.pdf")
+plt.savefig(f"pvp0/Ru_wave_gold={thick_gold}_pvp={thick_pvp}.jpg")
+plt.show()
 
 
-### To have an idea of a wavelength of interest. Conclusion : lam = 950 nm
+## Computation of sensitivities
+Sensitivity_Ru = (abs(Ru-Ru_mol)) / (RI_delta)
+Sensitivity_Tu = (abs(Tu-Tu_mol)) / (RI_delta)
+Sensitivity_Rd = (abs(Rd-Rd_mol)) / (RI_delta)
+Sensitivity_Td = (abs(Td-Td_mol)) / (RI_delta)
 
-# list_wavelength = np.linspace(450, 1500, 80)
-# Rd = np.empty(list_wavelength.size)
-# Ru = np.empty(list_wavelength.size)
-# Td = np.empty(list_wavelength.size)
-# Tu = np.empty(list_wavelength.size)
-# Rd_mol = np.empty(list_wavelength.size)
-# Ru_mol = np.empty(list_wavelength.size)
-# Td_mol = np.empty(list_wavelength.size)
-# Tu_mol = np.empty(list_wavelength.size)
-# idx = 0
+idx_max_ru = np.argmax(Sensitivity_Ru)
+S_max_ru = max(Sensitivity_Ru)
+lam_s_ru = list_wavelength[idx_max_ru]
+print("Smax_Ru=", S_max_ru)
+print("lam_Smax_Ru=", lam_s_ru)
 
-# geometry = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": 0, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
-# geometry_mol = {"thick_super": thick_super, "width_reso": width_reso, "thick_reso": thick_reso, "thick_gap": thick_gap, "thick_func": thick_func, "thick_mol": thick_mol, "thick_gold": thick_gold, "thick_sub": thick_sub, "thick_chrome": thick_cr, "period": period}
+idx_max_tu = np.argmax(Sensitivity_Tu)
+S_max_tu = max(Sensitivity_Tu)
+lam_s_tu = list_wavelength[idx_max_tu]
+print("Smax_Tu=", S_max_tu)
+print("lam_Smax_Tu=", lam_s_tu)
 
-# for wavelength in list_wavelength:
-#     print(idx)
-#     perm_Ag = epsAgbb(wavelength) # argent
-#     perm_Au = epsAubb(wavelength)
-#     perm_Cr = epsCrbb(wavelength)
-#     materials = {"perm_env": perm_env, "perm_dielec": perm_dielec, "perm_Glass": perm_Glass, "perm_Ag": perm_Ag, "perm_Au": perm_Au, "perm_Cr": perm_Cr}
-#     wave = {"wavelength": wavelength, "angle": angle, "polarization": polarization}
-#     Rd[idx], Ru[idx], Td[idx], Tu[idx] = reflectance(geometry, wave, materials, n_mod)
-#     Rd_mol[idx], Ru_mol[idx], Td_mol[idx], Tu_mol[idx] = reflectance(geometry_mol, wave, materials, n_mod)
-#     idx += 1
-    
+idx_max_rd = np.argmax(Sensitivity_Rd)
+S_max_rd = max(Sensitivity_Rd)
+lam_s_rd = list_wavelength[idx_max_rd]
+print("Smax_Rd=", S_max_rd)
+print("lam_Smax_Rd=", lam_s_rd)
 
-# plt.figure(1)
-# plt.plot(list_wavelength, Rd, "r", label = "R down")
-# plt.plot(list_wavelength, Rd_mol, "--") 
-# plt.plot(list_wavelength, Ru, "b", label = "R up")
-# plt.plot(list_wavelength, Ru_mol, "--") 
-# plt.plot(list_wavelength, Td, "g", label = "T down")
-# plt.plot(list_wavelength, Td_mol, "--") 
-# plt.plot(list_wavelength, Tu, "o", label = "T up")
-# plt.plot(list_wavelength, Tu_mol, "--") 
-# plt.legend()
-# plt.ylabel("Observable")
-# plt.title("Sensibility")
-# plt.xlabel("Wavelength (nm)")
+idx_max_td = np.argmax(Sensitivity_Td)
+S_max_td = max(Sensitivity_Td)
+lam_s_td = list_wavelength[idx_max_td]
+print("Smax_Td=", S_max_td)
+print("lam_Smax_Td=", lam_s_td)
 
-# plt.show(block=False)
-# plt.savefig("sensitivity_1.pdf")
-# plt.savefig("sensitivity_1.jpg")
+# Below, valid only for the set up wavelength range
+idx_reso_ru = np.argmin(Ru) 
+idx_reso_ru_delta = np.argmin(Ru_mol)
+S_lam_reso = np.abs(Ru[idx_reso_ru] - Ru_mol[idx_reso_ru_delta]) / (RI_delta) 
+print("S lambda reso = ", S_lam_reso)
 
+# # save the data into a file
+file = open(f"pvp0/Sensitivities_gold={thick_gold}_pvp={thick_pvp}.txt", 'w')
 
+file.write("Environnement : Air / n = 1.0 \n")
+file.write("Cube : Argent / n(lambda) / 55 nm\n")
+file.write("PVP : n = 1.45 / 4 nm\n")
+file.write("Gap diélectrique : n = 1.45 / 5 nm\n")
+file.write(f"Molécules : delta_n = {RI_delta} / 3 nm \n")
+file.write("Fonctionnalisation diélectrique / n = 1.45 / 1 nm\n")
+file.write("Accroche substrat-metal : Chrome / n(lambda) / 0 nm\n")
+file.write("Couche métallique : Or / n(lambda) / 30 nm\n")
+file.write("Substrat : SiO2 / n = 1.5 / 200 nm\n")
+file.write("\n")
+file.write("Wavelengths (nm) \t Rd \t Rd_mol\t Ru \t Ru_mol \t Td \t Td_mol\t Tu \t Tu_mol \n")
 
-# file = open(f"Data_sensitivity_1.txt", 'w')
-# file.write("Environnement : Air / n = 1 \n")
-# file.write("Cube : Argent / n(lambda) / 70 nm\n")
-# file.write("Gap diélectrique / n = 1.45 / 5 nm\n")
-# file.write("Fonctionnalisation diélectrique / n = 1.45 / 1 nm\n")
-# file.write("Couche métallique : Or / n(lambda) / 20 nm\n")
-# file.write("Substrat : SiO2 / n = 1.5 / 200 nm\n")
-# file.write("\n")
-# file.write("Wavelengths (nm) \t Rd \t Rd_mol\t Ru \t Ru_mol \t Td \t Td_mol\t Tu \t Tu_mol \n")
+for i in range(len(list_wavelength)):
+    file.write(f"{list_wavelength[i]}, {Rd[i]}, {Rd_mol[i]}, {Ru[i]}, {Ru_mol[i]}, {Td[i]},{Td_mol[i]},{Tu[i]},{Tu_mol[i]}\n")
+file.close()
 
-# for i in range(len(list_wavelength)):
-#     file.write(f"{list_wavelength[i]}, {Rd[i]}\t, {Rd_mol[i]}\t, {Ru[i]}\t,{Ru_mol[i]}\t,{Td[i]}\t,{Td_mol[i]}\t,{Tu[i]}\t,{Tu_mol[i]}\n")
-# file.close()
 
