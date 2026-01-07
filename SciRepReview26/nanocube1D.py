@@ -237,7 +237,7 @@ def reflectance(geometry, wave, materials, n_mod):
     #thick_super = geometry["thick_super"] / period
     width_reso = geometry["width_reso"] / period
     thick_reso = geometry["thick_reso"] / period
-    #thick_gap = geometry["thick_gap"] / period
+    thick_gap = geometry["thick_gap"] / period
     #thick_func = geometry["thick_func"] / period
     #thick_mol = geometry["thick_mol"] / period
     #thick_gold = geometry["thick_gold"] / period
@@ -250,7 +250,7 @@ def reflectance(geometry, wave, materials, n_mod):
 
     perm_env = materials["perm_env"]
     #perm_dielec = materials["perm_dielec"]
-    #perm_Glass = materials["perm_Glass"]
+    perm_Glass = materials["perm_Glass"]
     #perm_Ag = materials["perm_Ag"]
     perm_Au =  materials["perm_Au"]
     #perm_Cr = materials["perm_Cr"]
@@ -262,15 +262,28 @@ def reflectance(geometry, wave, materials, n_mod):
     k0 = 2 * np.pi / wavelength
     a0 = k0 * np.sin(angle * np.pi / 180)
 
+    # upper medium
     Pup, Vup = homogene(k0, a0,polarization, perm_env, n)
     S = np.block([[np.zeros([n, n]), np.eye(n, dtype=np.complex128)], [np.eye(n), np.zeros([n, n])]])
 
+    # layer with the nanocube
     P1, V1 = grating(k0, a0, polarization, perm_env, perm_Au, n, pos_reso)
     S = cascade(S, interface(Pup, P1))
     S = c_bas(S, V1, thick_reso)
 
-    Pdown, Vdown = homogene(k0, a0, polarization, perm_env, n)
-    S = cascade(S, interface(P1, Pdown))
+    # gap layer
+    P2, V2 = homogene(k0, a0, polarization, perm_dielec, n)
+    S = cascade(S, interface(P1, P2))
+    S = c_bas(S, V2, thick_gap)
+
+    # metallic film layer
+    P3, V3 = homogene(k0, a0, polarization, perm_Au, n)
+    S = cascade(S, interface(P2, P3))
+    S = c_bas(S, V3, thick_gold)
+
+    # substrate layer
+    Pdown, Vdown = homogene(k0, a0, polarization, perm_Glass, n)
+    S = cascade(S, interface(P3, Pdown))
     S = c_bas(S, Vdown, thick_sub)
 
     # reflexion quand on eclaire par le dessus
@@ -289,10 +302,10 @@ def reflectance(geometry, wave, materials, n_mod):
 thick_super = 100
 width_reso = 60 # largeur du cube
 thick_reso = width_reso # width_reso #hauteur du cube
-#thick_gap = 3 # hauteur de diéléctrique en dessous du cube
+thick_gap = 1 # hauteur de diéléctrique en dessous du cube
 #thick_func = 1 # présent partout tout le temps
 #thick_mol = 3 # si molécules détectées
-#thick_gold = 20 # hauteur de l'or au dessus du substrat
+thick_gold = 100 # hauteur de l'or au dessus du substrat
 #thick_cr = 1 # couche d'accroche 
 period = 200.2153 # periode
 thick_sub = 100
@@ -304,8 +317,8 @@ polarization = 1
 
 ## Paramètres des matériaux
 perm_env = 1.00 ** 2
-#perm_dielec = 1.45 ** 2 # spacer
-#perm_Glass = 1.5 ** 2 # substrat
+perm_dielec = 1.36 ** 2 # spacer
+perm_Glass = 1.5 ** 2 # substrat
 #perm_Ag = epsAgbb(wavelength) # argent
 #perm_Au = epsAubb(wavelength) # or
 #perm_Cr = epsCrbb(wavelength)
@@ -318,12 +331,12 @@ R = np.empty(list_wavelength.size)
 
 idx = 0
 
-geometry = {"width_reso": width_reso, "thick_reso": thick_reso, "thick_sub": thick_sub, "period": period}
+geometry = {"width_reso": width_reso, "thick_reso": thick_reso, "thick_sub": thick_sub, "period": period, "thick_gap": thick_gap, "thick_gold": thick_gold}
 
 for wavelength in list_wavelength:
     print("Idx = ", idx)
     perm_Au = epsAubb(wavelength)
-    materials = {"perm_env": perm_env, "perm_Au": perm_Au}
+    materials = {"perm_env": perm_env, "perm_Au": perm_Au, "perm_Glass": perm_Glass}
     wave = {"wavelength": wavelength, "angle": angle, "polarization": polarization}
     R[idx] = reflectance(geometry, wave, materials, n_mod)  
     idx += 1
@@ -339,6 +352,6 @@ plt.legend()
 plt.ylabel("Reflectance")
 #plt.title("Cube thickness / with (lines) or without (dotted) molecules")
 plt.xlabel("Wavelength (nm)")
-plt.savefig("Figure_2.png")
+plt.savefig("Figure_3_gold_substrate.png")
 plt.show()
 
